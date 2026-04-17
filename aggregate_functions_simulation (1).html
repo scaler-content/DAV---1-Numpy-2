@@ -1,0 +1,448 @@
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f7f7fb; padding: 1.25rem; }
+  .btn-row { display: flex; gap: 8px; margin-bottom: .75rem; flex-wrap: wrap; align-items: center; }
+  button { font-size: 13px; padding: 6px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; cursor: pointer; }
+  button:hover { background: #f0f0f0; }
+  button.primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+  button.primary:hover { background: #0C447C; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  select { font-size: 13px; padding: 4px 10px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; }
+  .progress-bar { height: 4px; background: #E6F1FB; border-radius: 2px; margin-bottom: .75rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: #185FA5; border-radius: 2px; transition: width 0.3s; }
+  .step-info { font-size: 13px; color: #0C447C; background: #E6F1FB; border: 1px solid #85B7EB; border-radius: 8px; padding: 9px 16px; margin-bottom: 1rem; min-height: 36px; text-align: center; line-height: 1.5; }
+
+  .sec { background: #fff; border-radius: 14px; border: 0.5px solid #e0e0e0; padding: 1rem 1.25rem; margin-bottom: .75rem; opacity: 0; transition: opacity 0.5s, border-color 0.3s; }
+  .sec.active { border-color: #185FA5; box-shadow: 0 0 0 3px #E6F1FB; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #185FA5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  .builder-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; background: #f0f5ff; border-radius: 10px; border: 1px solid #c5d8f5; }
+  .builder-row label { font-size: 12px; color: #185FA5; font-weight: 600; }
+  .dim-sel { font-size: 13px; padding: 4px 10px; border-radius: 7px; border: 1.5px solid #85B7EB; color: #0C447C; font-weight: 600; background: #fff; width: 60px; }
+  .build-btn { font-size: 12px; padding: 5px 16px; border-radius: 7px; background: #185FA5; color: #fff; border: none; cursor: pointer; }
+  .build-btn:hover { background: #0C447C; }
+  .preset-btn { font-size: 11px; padding: 3px 10px; border-radius: 6px; border: 1px solid #85B7EB; background: #E6F1FB; color: #0C447C; cursor: pointer; }
+  .preset-btn:hover { background: #B5D4F4; }
+  .edit-col-hdrs { display: flex; gap: 5px; margin-left: 48px; margin-bottom: 3px; }
+  .edit-col-hdr { width: 54px; text-align: center; font-size: 10px; color: #999; font-weight: 500; }
+  .edit-grid { display: inline-flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+  .edit-row { display: flex; align-items: center; gap: 5px; }
+  .edit-lbl { width: 42px; font-size: 10px; color: #999; text-align: right; padding-right: 6px; }
+  .edit-cell { width: 54px; height: 48px; border-radius: 8px; border: 2px solid #85B7EB; background: #E6F1FB; color: #0C447C; font-size: 15px; font-weight: 700; text-align: center; }
+  .edit-cell:focus { outline: none; border-color: #185FA5; background: #fff; }
+
+  .codebl { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px 4px; font-family: monospace; font-size: 12.5px; line-height: 1.85; overflow-x: auto; opacity: 0; transition: opacity 0.5s; margin-bottom: 10px; }
+  .codeline { padding: 2px 12px; border-radius: 3px; white-space: pre; color: #111; display: block; transition: background 0.3s; }
+  .codeline.hl { background: #FFF9C4; border-left: 3px solid #F9A825; padding-left: 9px; }
+  .cm { color: #888; } .out { color: #1B5E20; font-weight: 600; } .fn { color: #185FA5; font-weight: 700; }
+
+  .hdr-row { display: flex; gap: 5px; margin-left: 48px; margin-bottom: 4px; }
+  .hdr-cell { width: 56px; text-align: center; font-size: 10px; color: #999; font-weight: 500; }
+  .data-row { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+  .row-label { width: 42px; text-align: right; font-size: 10px; color: #999; font-weight: 500; padding-right: 6px; flex-shrink: 0; }
+  .cell { width: 56px; height: 52px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; border: 2px solid; transition: all 0.3s; }
+  .c-blue   { background: #E6F1FB; color: #0C447C; border-color: #378ADD; }
+  .c-dim    { background: #f9f9f9; color: #ccc; border-color: #eee; }
+  .c-scan   { background: #FFF9C4; color: #7B6000; border-color: #F9A825; transform: scale(1.1); }
+  .c-ok     { background: #E8F5E9; color: #1B5E20; border-color: #43A047; }
+  .c-col-hl { background: #E6F1FB; color: #0C447C; border-color: #185FA5; }
+  .c-row-hl { background: #E6F1FB; color: #0C447C; border-color: #185FA5; }
+
+  .agg-cards { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-top: 10px; }
+  .agg-card { border-radius: 10px; padding: 12px 10px; text-align: center; border: 2px solid; opacity: 0; transition: opacity 0.5s; }
+  .agg-card.show { opacity: 1; }
+  .agg-fn  { font-family: monospace; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+  .agg-val { font-size: 26px; font-weight: 700; }
+  .agg-sum  { background: #E6F1FB; border-color: #378ADD; }
+  .agg-sum  .agg-fn { color: #185FA5; } .agg-sum  .agg-val { color: #0C447C; }
+  .agg-mean { background: #E8F5E9; border-color: #43A047; }
+  .agg-mean .agg-fn { color: #2E7D32; } .agg-mean .agg-val { color: #1B5E20; }
+  .agg-min  { background: #FFEBEE; border-color: #E53935; }
+  .agg-min  .agg-fn { color: #C62828; } .agg-min  .agg-val { color: #B71C1C; }
+  .agg-max  { background: #FFF9C4; border-color: #F9A825; }
+  .agg-max  .agg-fn { color: #7B6000; } .agg-max  .agg-val { color: #7B6000; }
+
+  .scan-pill { font-size: 13px; font-weight: 500; border-radius: 7px; padding: 5px 14px; display: inline-block; margin-bottom: 8px; min-height: 28px; opacity: 0; transition: opacity 0.3s; }
+  .sp-hl { background: #FFF9C4; color: #7B6000; border: 1px solid #F9A825; }
+  .sp-ok { background: #E8F5E9; color: #1B5E20; border: 1px solid #81C784; }
+
+  .result-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .result-cell { width: 56px; height: 52px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; background: #E8F5E9; color: #1B5E20; border: 2px solid #43A047; opacity: 0; transform: scale(0.7); transition: opacity 0.35s, transform 0.35s; }
+  .result-cell.show { opacity: 1; transform: scale(1); }
+  .result-label { font-family: monospace; font-size: 13px; color: #1B5E20; font-weight: 600; margin-left: 8px; opacity: 0; transition: opacity 0.5s; }
+  .result-label.show { opacity: 1; }
+
+  .axis1-row { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+  .arrow-right { font-size: 18px; color: #185FA5; font-weight: 700; }
+  .res-cell-r { width: 56px; height: 52px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; background: #E8F5E9; color: #1B5E20; border: 2px solid #43A047; opacity: 0; transform: scale(0.7); transition: opacity 0.35s, transform 0.35s; }
+  .res-cell-r.show { opacity: 1; transform: scale(1); }
+
+  .rcard { border-radius: 10px; padding: 10px 14px; border: 2px solid; opacity: 0; transition: opacity 0.5s; margin-bottom: 8px; }
+  .rcard.show { opacity: 1; }
+  .rc-ok { background: #E8F5E9; border-color: #43A047; }
+  .rc-ok .rc-expr { color: #1B5E20; } .rc-ok .rc-desc { color: #2E7D32; }
+  .rc-expr { font-family: monospace; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .rc-desc { font-size: 12px; line-height: 1.5; }
+</style>
+
+<h2 style="font-size:16px;font-weight:500;color:#111;margin-bottom:.75rem;">Aggregate functions — sum, mean, min, max</h2>
+
+<div class="btn-row">
+  <button class="primary" id="playBtn">▶ Play</button>
+  <button id="stepBtn">Step →</button>
+  <button id="resetBtn">↺ Reset</button>
+  <span style="font-size:12px;color:#888;">Speed:</span>
+  <select id="speedSel">
+    <option value="900">Slow</option>
+    <option value="500" selected>Normal</option>
+    <option value="180">Fast</option>
+  </select>
+  <span id="phaseLabel" style="font-size:12px;color:#aaa;margin-left:4px;"></span>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+<div class="step-info" id="stepInfo">Edit the array below, then press Play.</div>
+
+<!-- Sec 1 -->
+<div class="sec" id="sec1" style="opacity:1;">
+  <div class="sec-label">Step 1 — build your array</div>
+  <div class="builder-row">
+    <label>Rows:</label>
+    <select class="dim-sel" id="selRows"><option>2</option><option selected>3</option><option>4</option></select>
+    <label>Cols:</label>
+    <select class="dim-sel" id="selCols"><option>2</option><option>3</option><option selected>4</option><option>5</option></select>
+    <button class="build-btn" id="applyDims">Resize</button>
+    <button class="preset-btn" onclick="loadPreset('default')">Default (3×4)</button>
+    <button class="preset-btn" onclick="loadPreset('rand')">Random</button>
+  </div>
+  <div class="edit-col-hdrs" id="editColHdrs"></div>
+  <div class="edit-grid" id="editGrid"></div>
+  <div class="codebl" id="cb1" style="opacity:1;">
+    <span class="codeline" id="cl1">m1 = np.array([[0,1,2,3],[4,5,6,7],[8,9,10,11]])</span>
+  </div>
+</div>
+
+<!-- Sec 2 -->
+<div class="sec" id="sec2">
+  <div class="sec-label">Step 2 — whole-array aggregates (no axis)</div>
+  <div class="codebl" id="cb2">
+    <span class="codeline" id="cl2a">np.<span class="fn">sum</span>(m1)   <span class="out" id="outSum">→  66</span>   <span class="cm"># total of all elements</span></span>
+    <span class="codeline" id="cl2b">np.<span class="fn">mean</span>(m1)  <span class="out" id="outMean">→  5.5</span>  <span class="cm"># average = sum ÷ count</span></span>
+    <span class="codeline" id="cl2c">np.<span class="fn">min</span>(m1)   <span class="out" id="outMin">→  0</span>    <span class="cm"># smallest value</span></span>
+    <span class="codeline" id="cl2d">np.<span class="fn">max</span>(m1)   <span class="out" id="outMax">→  11</span>   <span class="cm"># largest value</span></span>
+  </div>
+  <div class="scan-pill sp-hl" id="pill2">&nbsp;</div>
+  <div class="hdr-row" id="hdr2"></div>
+  <div id="grid2"></div>
+  <div class="agg-cards">
+    <div class="agg-card agg-sum"  id="ac0"><div class="agg-fn">np.sum(m1)</div><div class="agg-val" id="av0">66</div></div>
+    <div class="agg-card agg-mean" id="ac1"><div class="agg-fn">np.mean(m1)</div><div class="agg-val" id="av1">5.5</div></div>
+    <div class="agg-card agg-min"  id="ac2"><div class="agg-fn">np.min(m1)</div><div class="agg-val" id="av2">0</div></div>
+    <div class="agg-card agg-max"  id="ac3"><div class="agg-fn">np.max(m1)</div><div class="agg-val" id="av3">11</div></div>
+  </div>
+</div>
+
+<!-- Sec 3 -->
+<div class="sec" id="sec3">
+  <div class="sec-label">Step 3 — np.sum(m1, axis=0) — sum DOWN each column ↓</div>
+  <div class="codebl" id="cb3">
+    <span class="codeline" id="cl3a"><span class="cm"># axis=0 = collapse rows — one result per column</span></span>
+    <span class="codeline" id="cl3b">np.<span class="fn">sum</span>(m1, axis=<span class="fn">0</span>)  <span class="out" id="outAxis0">→  array([12, 15, 18, 21])</span></span>
+  </div>
+  <div class="scan-pill sp-hl" id="pill3">&nbsp;</div>
+  <div class="hdr-row" id="hdr3"></div>
+  <div id="grid3"></div>
+  <div class="result-row" id="resRow3"></div>
+  <div class="rcard rc-ok" id="rc3" style="margin-top:8px;">
+    <div class="rc-expr" id="rc3expr">np.sum(m1, axis=0)  →  array([12,15,18,21])</div>
+    <div class="rc-desc">axis=0 collapses rows — one sum per column. Result length = number of columns.</div>
+  </div>
+</div>
+
+<!-- Sec 4 -->
+<div class="sec" id="sec4">
+  <div class="sec-label">Step 4 — np.sum(m1, axis=1) — sum ACROSS each row →</div>
+  <div class="codebl" id="cb4">
+    <span class="codeline" id="cl4a"><span class="cm"># axis=1 = collapse columns — one result per row</span></span>
+    <span class="codeline" id="cl4b">np.<span class="fn">sum</span>(m1, axis=<span class="fn">1</span>)  <span class="out" id="outAxis1">→  array([6, 22, 38])</span></span>
+  </div>
+  <div class="scan-pill sp-hl" id="pill4">&nbsp;</div>
+  <div class="hdr-row" id="hdr4"></div>
+  <div id="grid4"></div>
+  <div class="rcard rc-ok" id="rc4" style="margin-top:8px;">
+    <div class="rc-expr" id="rc4expr">np.sum(m1, axis=1)  →  array([6,22,38])</div>
+    <div class="rc-desc">axis=1 collapses columns — one sum per row. Result length = number of rows.</div>
+  </div>
+</div>
+
+<script>
+let DATA=[[0,1,2,3],[4,5,6,7],[8,9,10,11]], R=3, C=4;
+
+function buildEditGrid(){
+  R=parseInt(document.getElementById('selRows').value);
+  C=parseInt(document.getElementById('selCols').value);
+  const hdrs=document.getElementById('editColHdrs'); hdrs.innerHTML='';
+  const dummy=document.createElement('div'); dummy.style.cssText='width:48px;flex-shrink:0;'; hdrs.appendChild(dummy);
+  for(let c=0;c<C;c++){ const h=document.createElement('div'); h.className='edit-col-hdr'; h.textContent='col '+c; hdrs.appendChild(h); }
+  const g=document.getElementById('editGrid'); g.innerHTML='';
+  for(let r=0;r<R;r++){
+    const row=document.createElement('div'); row.className='edit-row';
+    const lbl=document.createElement('div'); lbl.className='edit-lbl'; lbl.textContent='row '+r; row.appendChild(lbl);
+    for(let c=0;c<C;c++){
+      const inp=document.createElement('input'); inp.className='edit-cell'; inp.type='number'; inp.id=`ec${r}${c}`;
+      inp.value=(DATA[r]&&DATA[r][c]!==undefined)?DATA[r][c]:r*C+c;
+      inp.addEventListener('input',updatePreview);
+      row.appendChild(inp);
+    }
+    g.appendChild(row);
+  }
+  updatePreview();
+}
+
+function updatePreview(){
+  const rows=[];
+  for(let r=0;r<R;r++){ const row=[]; for(let c=0;c<C;c++){ const el=document.getElementById(`ec${r}${c}`); row.push(el?parseInt(el.value)||0:0); } rows.push('['+row.join(',')+']'); }
+  document.getElementById('cl1').textContent=`m1 = np.array([${rows.join(',')}])`;
+}
+
+function readData(){
+  DATA=[];
+  for(let r=0;r<R;r++){ DATA[r]=[]; for(let c=0;c<C;c++){ const el=document.getElementById(`ec${r}${c}`); DATA[r][c]=el?parseInt(el.value)||0:0; } }
+}
+
+function loadPreset(t){
+  if(t==='default'){ document.getElementById('selRows').value=3; document.getElementById('selCols').value=4; buildEditGrid(); for(let r=0;r<3;r++) for(let c=0;c<4;c++){ const el=document.getElementById(`ec${r}${c}`); if(el) el.value=r*4+c; } }
+  if(t==='rand')   { buildEditGrid(); for(let r=0;r<R;r++) for(let c=0;c<C;c++){ const el=document.getElementById(`ec${r}${c}`); if(el) el.value=Math.floor(Math.random()*20)+1; } }
+  updatePreview();
+}
+
+document.getElementById('applyDims').addEventListener('click',buildEditGrid);
+buildEditGrid();
+
+// computed helpers — always use DATA
+function flatArr(){ return DATA.reduce((a,r)=>a.concat(r),[]); }
+function colSums(){ return Array.from({length:C},(_,c)=>DATA.reduce((s,r)=>s+r[c],0)); }
+function rowSums(){ return DATA.map(r=>r.reduce((a,b)=>a+b,0)); }
+
+function updateDynamic(){
+  const f=flatArr(), cs=colSums(), rs=rowSums();
+  const s=f.reduce((a,b)=>a+b,0);
+  const mn=(s/f.length).toFixed(2);
+  const mi=Math.min(...f), mx=Math.max(...f);
+  document.getElementById('outSum').textContent=`→  ${s}`;
+  document.getElementById('outMean').textContent=`→  ${mn}`;
+  document.getElementById('outMin').textContent=`→  ${mi}`;
+  document.getElementById('outMax').textContent=`→  ${mx}`;
+  document.getElementById('av0').textContent=s;
+  document.getElementById('av1').textContent=mn;
+  document.getElementById('av2').textContent=mi;
+  document.getElementById('av3').textContent=mx;
+  document.getElementById('outAxis0').textContent=`→  array([${cs.join(', ')}])`;
+  document.getElementById('outAxis1').textContent=`→  array([${rs.join(', ')}])`;
+  document.getElementById('rc3expr').textContent=`np.sum(m1, axis=0)  →  array([${cs.join(',')}])`;
+  document.getElementById('rc4expr').textContent=`np.sum(m1, axis=1)  →  array([${rs.join(',')}])`;
+}
+
+function makeHdrs(id){ const el=document.getElementById(id); el.innerHTML=''; el.className='hdr-row'; for(let c=0;c<C;c++){ const h=document.createElement('div'); h.className='hdr-cell'; h.textContent='col '+c; el.appendChild(h); } }
+function makeGrid(id,pfx,cls='c-blue'){ const cont=document.getElementById(id); cont.innerHTML=''; DATA.forEach((row,r)=>{ const wrap=document.createElement('div'); wrap.className='data-row'; const lbl=document.createElement('div'); lbl.className='row-label'; lbl.textContent='row '+r; wrap.appendChild(lbl); row.forEach((v,c)=>{ const cell=document.createElement('div'); cell.className=`cell ${cls}`; cell.id=`${pfx}${r}${c}`; cell.textContent=v; wrap.appendChild(cell); }); cont.appendChild(wrap); }); }
+function getCell(pfx,r,c){ return document.getElementById(`${pfx}${r}${c}`); }
+function clrHL(secId){ document.querySelectorAll(`#${secId} .codeline`).forEach(e=>e.classList.remove('hl')); }
+function hlLine(id){ const e=document.getElementById(id); if(e) e.classList.add('hl'); }
+function showEl(id){ const e=document.getElementById(id); if(e) e.style.opacity='1'; }
+function activeSection(id){ document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function setPill(id,cls,txt){ const p=document.getElementById(id); if(!p) return; p.className=`scan-pill ${cls}`; p.style.opacity='1'; p.textContent=txt; }
+function hidePill(id){ const p=document.getElementById(id); if(p) p.style.opacity='0'; }
+function resetGrid2(){ DATA.forEach((_,r)=>DATA[r].forEach((_,c)=>{ const e=getCell('g2',r,c); if(e) e.className='cell c-blue'; })); hidePill('pill2'); }
+
+let STEPS=[], current=-1, playing=false, playTimer=null, built={};
+
+function buildSteps(){
+  const f=flatArr(), cs=colSums(), rs=rowSums();
+  const s=f.reduce((a,b)=>a+b,0);
+  const mn=(s/f.length).toFixed(2);
+  const mi=Math.min(...f), mx=Math.max(...f);
+  const total=f.length;
+
+  STEPS=[
+    {s:'sec1', t:'build', info:'Array ready. Press Step to start the simulation.'},
+    // Sec 2
+    {s:'sec2', t:'sec',   info:'Step 2: whole-array aggregates — NumPy scans every element.'},
+    {s:'sec2', t:'cb',    id:'cb2', line:'cl2a', info:`np.sum scans all ${total} elements and adds them together.`},
+    // SUM scan
+    ...f.map((v,i)=>{
+      const run=f.slice(0,i+1).reduce((a,b)=>a+b,0);
+      const r=Math.floor(i/C), c=i%C;
+      return { s:'sec2', t:'aggScan', fn:'sum', i, r, c, v, run, line:'cl2a', info:`[${r},${c}] = ${v} → running sum = ${run}` };
+    }),
+    {s:'sec2', t:'showCard', i:0, line:'cl2a', info:`Sum = ${s}. All ${total} values added.`},
+    // MEAN
+    {s:'sec2', t:'meanStep', s_val:s, count:total, mn, line:'cl2b', info:`np.mean = sum ÷ count = ${s} ÷ ${total} = ${mn}`},
+    {s:'sec2', t:'showCard', i:1, line:'cl2b', info:`Mean = ${mn}.`},
+    // MIN scan
+    ...f.map((v,i)=>{
+      const run=Math.min(...f.slice(0,i+1));
+      const r=Math.floor(i/C), c=i%C;
+      return { s:'sec2', t:'aggScan', fn:'min', i, r, c, v, run, line:'cl2c', info:`[${r},${c}] = ${v} → current min = ${run}` };
+    }),
+    {s:'sec2', t:'showCard', i:2, line:'cl2c', info:`Min = ${mi}. Smallest value found.`},
+    // MAX scan
+    ...f.map((v,i)=>{
+      const run=Math.max(...f.slice(0,i+1));
+      const r=Math.floor(i/C), c=i%C;
+      return { s:'sec2', t:'aggScan', fn:'max', i, r, c, v, run, line:'cl2d', info:`[${r},${c}] = ${v} → current max = ${run}` };
+    }),
+    {s:'sec2', t:'showCard', i:3, line:'cl2d', info:`Max = ${mx}. Largest value found.`},
+    // Sec 3 axis=0
+    {s:'sec3', t:'sec',   info:'Step 3: axis=0 — sum down each column independently.'},
+    {s:'sec3', t:'cb',    id:'cb3', line:'cl3a', info:'axis=0 collapses the row dimension — one result per column.'},
+    ...Array.from({length:C},(_,c)=>({ s:'sec3', t:'colScan', c, cs, line:'cl3b', info:`Column ${c}: ${DATA.map(r=>r[c]).join(' + ')} = ${cs[c]}` })),
+    {s:'sec3', t:'axis0Done', cs, line:'cl3b', info:`All columns summed → array([${cs.join(', ')}])`},
+    {s:'sec3', t:'rcard', id:'rc3', info:'axis=0 gives one value per column.'},
+    // Sec 4 axis=1
+    {s:'sec4', t:'sec',   info:'Step 4: axis=1 — sum across each row independently.'},
+    {s:'sec4', t:'cb',    id:'cb4', line:'cl4a', info:'axis=1 collapses the column dimension — one result per row.'},
+    ...Array.from({length:R},(_,r)=>({ s:'sec4', t:'rowScan', r, rs, line:'cl4b', info:`Row ${r}: ${DATA[r].join(' + ')} = ${rs[r]}` })),
+    {s:'sec4', t:'axis1Done', rs, line:'cl4b', info:`All rows summed → array([${rs.join(', ')}])`},
+    {s:'sec4', t:'rcard', id:'rc4', info:'axis=1 gives one value per row.'},
+  ];
+}
+
+function applyStep(s){
+  setPct(s);
+  const step=STEPS[s];
+  if(step.line){ clrHL(step.s); hlLine(step.line); }
+
+  if(step.t==='build'){
+    readData(); updateDynamic(); activeSection('sec1'); setInfo(step.info); setPhase('Step 1'); return;
+  }
+  if(step.t==='sec'){
+    showEl(step.s); activeSection(step.s);
+    if(!built[step.s]){
+      if(step.s==='sec2'){ makeHdrs('hdr2'); makeGrid('grid2','g2'); }
+      if(step.s==='sec3'){ makeHdrs('hdr3'); makeGrid('grid3','g3'); }
+      if(step.s==='sec4'){ makeHdrs('hdr4'); makeGrid('grid4','g4'); }
+      built[step.s]=true;
+    }
+    setInfo(step.info); setPhase('Step '+step.s.replace('sec','')); return;
+  }
+  if(step.t==='cb'){ showEl(step.id); setInfo(step.info); return; }
+  if(step.t==='rcard'){ document.getElementById(step.id).classList.add('show'); setInfo(step.info); return; }
+
+  if(step.t==='aggScan'){
+    const total=flatArr().length;
+    DATA.forEach((_,ri)=>DATA[ri].forEach((_,ci)=>{
+      const idx=ri*C+ci, e=getCell('g2',ri,ci); if(!e) return;
+      if(idx<step.i) e.className='cell c-ok';
+      else if(idx===step.i) e.className='cell c-scan';
+      else e.className='cell c-dim';
+    }));
+    setPill('pill2','sp-hl',step.info);
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='showCard'){
+    resetGrid2();
+    document.getElementById('ac'+step.i).classList.add('show');
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='meanStep'){
+    DATA.forEach((_,r)=>DATA[r].forEach((_,c)=>{ const e=getCell('g2',r,c); if(e) e.className='cell c-ok'; }));
+    setPill('pill2','sp-ok',`sum=${step.s_val} ÷ count=${step.count} = ${step.mn}`);
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='colScan'){
+    const c=step.c, cs=step.cs;
+    DATA.forEach((_,r)=>DATA[r].forEach((_,ci)=>{
+      const e=getCell('g3',r,ci); if(!e) return;
+      e.className=`cell ${ci===c?'c-scan':ci<c?'c-col-hl':'c-blue'}`;
+    }));
+    const rr=document.getElementById('resRow3'); rr.innerHTML='';
+    for(let ci=0;ci<C;ci++){
+      const el=document.createElement('div'); el.className=`result-cell${ci<c?' show':''}`; el.textContent=cs[ci]; rr.appendChild(el);
+    }
+    setPill('pill3','sp-hl',`Col ${c}: ${DATA.map(r=>r[c]).join('+')} = ${cs[c]}`);
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='axis0Done'){
+    const cs=step.cs;
+    DATA.forEach((_,r)=>DATA[r].forEach((_,c)=>{ const e=getCell('g3',r,c); if(e) e.className='cell c-ok'; }));
+    const rr=document.getElementById('resRow3'); rr.innerHTML='';
+    cs.forEach((v,i)=>{ const el=document.createElement('div'); el.className='result-cell'; el.textContent=v; rr.appendChild(el); requestAnimationFrame(()=>el.classList.add('show')); });
+    const lbl=document.createElement('div'); lbl.className='result-label'; lbl.textContent=`→  array([${cs.join(', ')}])`; rr.appendChild(lbl); requestAnimationFrame(()=>lbl.classList.add('show'));
+    hidePill('pill3'); setInfo(step.info); return;
+  }
+
+  if(step.t==='rowScan'){
+    const r=step.r, rs=step.rs;
+    const cont=document.getElementById('grid4'); cont.innerHTML='';
+    DATA.forEach((row,ri)=>{
+      const wrap=document.createElement('div'); wrap.className='axis1-row';
+      const lbl=document.createElement('div'); lbl.className='row-label'; lbl.textContent='row '+ri; wrap.appendChild(lbl);
+      row.forEach((v,c)=>{ const cell=document.createElement('div'); cell.className=`cell ${ri===r?'c-scan':ri<r?'c-row-hl':'c-blue'}`; cell.textContent=v; wrap.appendChild(cell); });
+      const arrow=document.createElement('div'); arrow.className='arrow-right'; arrow.textContent='→'; wrap.appendChild(arrow);
+      const res=document.createElement('div'); res.className=`res-cell-r${ri<=r?' show':''}`; res.style.opacity=ri>r?'0':''; res.textContent=rs[ri]; wrap.appendChild(res);
+      cont.appendChild(wrap);
+    });
+    setPill('pill4','sp-hl',`Row ${r}: ${DATA[r].join('+')} = ${rs[r]}`);
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='axis1Done'){
+    const rs=step.rs;
+    const cont=document.getElementById('grid4'); cont.innerHTML='';
+    DATA.forEach((row,ri)=>{
+      const wrap=document.createElement('div'); wrap.className='axis1-row';
+      const lbl=document.createElement('div'); lbl.className='row-label'; lbl.textContent='row '+ri; wrap.appendChild(lbl);
+      row.forEach(v=>{ const cell=document.createElement('div'); cell.className='cell c-ok'; cell.textContent=v; wrap.appendChild(cell); });
+      const arrow=document.createElement('div'); arrow.className='arrow-right'; arrow.textContent='→'; wrap.appendChild(arrow);
+      const res=document.createElement('div'); res.className='res-cell-r show'; res.textContent=rs[ri]; wrap.appendChild(res);
+      cont.appendChild(wrap);
+    });
+    hidePill('pill4'); setInfo(step.info); return;
+  }
+}
+
+function setPct(s){ document.getElementById('progressFill').style.width=Math.round(((s+1)/STEPS.length)*100)+'%'; }
+function setInfo(t){ document.getElementById('stepInfo').textContent=t; }
+function setPhase(t){ document.getElementById('phaseLabel').textContent=t; }
+function getSpeed(){ return parseInt(document.getElementById('speedSel').value); }
+
+function stepForward(){
+  if(STEPS.length===0){ readData(); buildSteps(); }
+  if(current>=STEPS.length-1) return;
+  current++; applyStep(current);
+  document.getElementById('stepBtn').disabled=current>=STEPS.length-1;
+}
+function startPlay(){
+  if(STEPS.length===0||current>=STEPS.length-1){ hardReset(); }
+  if(STEPS.length===0){ readData(); buildSteps(); }
+  playing=true; document.getElementById('playBtn').textContent='⏸ Pause';
+  document.getElementById('stepBtn').disabled=true; tick();
+}
+function tick(){ if(!playing) return; if(current>=STEPS.length-1){ stopPlay(); return; } stepForward(); playTimer=setTimeout(tick,getSpeed()); }
+function stopPlay(){ playing=false; clearTimeout(playTimer); document.getElementById('playBtn').textContent='▶ Play'; document.getElementById('stepBtn').disabled=current>=STEPS.length-1; }
+
+function hardReset(){
+  stopPlay(); current=-1; built={}; STEPS=[];
+  ['sec2','sec3','sec4'].forEach(id=>{ const e=document.getElementById(id); if(e){e.style.opacity='0';e.classList.remove('active');} });
+  document.getElementById('sec1').classList.remove('active');
+  ['cb2','cb3','cb4'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.opacity='0'; });
+  ['ac0','ac1','ac2','ac3'].forEach(id=>{ const e=document.getElementById(id); if(e) e.classList.remove('show'); });
+  ['rc3','rc4'].forEach(id=>{ const e=document.getElementById(id); if(e) e.classList.remove('show'); });
+  ['pill2','pill3','pill4'].forEach(id=>{ const e=document.getElementById(id); if(e){e.style.opacity='0';e.textContent='';} });
+  ['grid2','hdr2','grid3','hdr3','grid4','hdr4','resRow3'].forEach(id=>{ const e=document.getElementById(id); if(e) e.innerHTML=''; });
+  document.querySelectorAll('.codeline').forEach(e=>e.classList.remove('hl'));
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('phaseLabel').textContent='';
+  document.getElementById('stepInfo').textContent='Edit the array below, then press Play.';
+  document.getElementById('stepBtn').disabled=false;
+  document.getElementById('playBtn').textContent='▶ Play';
+}
+
+document.getElementById('playBtn').addEventListener('click',()=>{ if(playing) stopPlay(); else startPlay(); });
+document.getElementById('stepBtn').addEventListener('click',stepForward);
+document.getElementById('resetBtn').addEventListener('click',hardReset);
+hardReset();
+</script>
