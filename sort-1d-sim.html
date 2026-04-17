@@ -1,0 +1,297 @@
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f7f7fb; padding: 1.25rem; }
+  .btn-row { display: flex; gap: 8px; margin-bottom: .75rem; flex-wrap: wrap; align-items: center; }
+  button { font-size: 13px; padding: 6px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; cursor: pointer; }
+  button:hover { background: #f0f0f0; }
+  button.primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+  button.primary:hover { background: #0C447C; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  select { font-size: 13px; padding: 4px 10px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; }
+  .progress-bar { height: 4px; background: #E6F1FB; border-radius: 2px; margin-bottom: .75rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: #185FA5; border-radius: 2px; transition: width 0.3s; }
+  .step-info { font-size: 13px; color: #0C447C; background: #E6F1FB; border: 1px solid #85B7EB; border-radius: 8px; padding: 9px 16px; margin-bottom: 1rem; min-height: 36px; text-align: center; line-height: 1.5; }
+
+  .sec { background: #fff; border-radius: 14px; border: 0.5px solid #e0e0e0; padding: 1rem 1.25rem; margin-bottom: .75rem; opacity: 0; transition: opacity 0.5s, border-color 0.3s; }
+  .sec.active { border-color: #185FA5; box-shadow: 0 0 0 3px #E6F1FB; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #185FA5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  .builder-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; background: #f0f5ff; border-radius: 10px; border: 1px solid #c5d8f5; }
+  .builder-row label { font-size: 12px; color: #185FA5; font-weight: 600; }
+  .preset-btn { font-size: 11px; padding: 3px 10px; border-radius: 6px; border: 1px solid #85B7EB; background: #E6F1FB; color: #0C447C; cursor: pointer; }
+  .preset-btn:hover { background: #B5D4F4; }
+  .edit-col-hdrs { display: flex; gap: 4px; margin-left: 52px; margin-bottom: 3px; }
+  .edit-col-hdr  { width: 52px; text-align: center; font-size: 10px; color: #999; }
+  .edit-row { display: flex; align-items: center; gap: 4px; }
+  .edit-lbl { width: 46px; font-size: 10px; color: #999; text-align: right; padding-right: 6px; flex-shrink: 0; }
+  .edit-cell { width: 52px; height: 42px; border-radius: 8px; border: 2px solid #85B7EB; background: #E6F1FB; color: #0C447C; font-size: 13px; font-weight: 700; text-align: center; padding: 0; }
+  .edit-cell:focus { outline: none; border-color: #185FA5; background: #fff; }
+
+  .codebl { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px 4px; font-family: monospace; font-size: 12.5px; line-height: 1.85; overflow-x: auto; opacity: 0; transition: opacity 0.5s; margin-bottom: 10px; }
+  .codeline { padding: 2px 12px; border-radius: 3px; white-space: pre; color: #111; display: block; transition: background 0.3s; }
+  .codeline.hl { background: #FFF9C4; border-left: 3px solid #F9A825; padding-left: 9px; }
+  .cm  { color: #888; }
+  .out { color: #1B5E20; font-weight: 600; }
+  .err { color: #B71C1C; font-weight: 600; }
+  .idx { color: #185FA5; font-weight: 700; }
+
+  .arr-wrap { overflow-x: auto; margin-bottom: 10px; }
+  .arr-row { display: flex; gap: 4px; }
+  .cell { width: 58px; height: 52px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; border: 2px solid; transition: all 0.35s; }
+  .c-blue  { background: #E6F1FB; color: #0C447C; border-color: #378ADD; }
+  .c-rowhl { background: #FFF9C4; color: #7B6000; border-color: #F9A825; }
+  .c-hit   { background: #E8F5E9; color: #1B5E20; border-color: #43A047; }
+  .c-err   { background: #FFEBEE; color: #B71C1C; border-color: #E53935; }
+  .c-dim   { background: #f9f9f9; color: #bbb; border-color: #e0e0e0; }
+
+  .scan-pill { font-size: 13px; font-weight: 500; border-radius: 7px; padding: 5px 14px; display: inline-block; margin-bottom: 8px; opacity: 0; transition: opacity 0.3s; min-height: 28px; }
+  .sp-hl { background: #FFF9C4; color: #7B6000; border: 1px solid #F9A825; }
+  .sp-ok { background: #E8F5E9; color: #1B5E20; border: 1px solid #81C784; }
+
+  .rcards { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .rcard { border-radius: 10px; padding: 10px 14px; border: 2px solid; opacity: 0; transition: opacity 0.5s; }
+  .rcard.show { opacity: 1; }
+  .rc-ok  { background: #E8F5E9; border-color: #43A047; }
+  .rc-ok  .rc-expr { color: #1B5E20; } .rc-ok  .rc-desc { color: #2E7D32; }
+  .rc-err { background: #FFEBEE; border-color: #E53935; }
+  .rc-err .rc-expr { color: #B71C1C; } .rc-err .rc-desc { color: #C62828; }
+  .rc-hl  { background: #FFF9C4; border-color: #F9A825; }
+  .rc-hl  .rc-expr { color: #7B6000; } .rc-hl  .rc-desc { color: #7B6000; }
+  .rc-expr { font-family: monospace; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .rc-desc { font-size: 12px; line-height: 1.5; }
+
+  .sticky-ref { position: sticky; top: 0; z-index: 100; background: #1a2744; border-radius: 10px; padding: 10px 16px; margin-bottom: 1rem; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+  .sr-title { font-size: 11px; font-weight: 700; color: #aac4f0; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 4px; white-space: nowrap; }
+  .sr-chip { border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; font-family: monospace; white-space: nowrap; }
+  .sr-ok  { background: #1B5E20; color: #C8E6C9; border: 1px solid #43A047; }
+  .sr-err { background: #7f1c1c; color: #FFCDD2; border: 1px solid #E53935; }
+  .sr-hl  { background: #7B6000; color: #FFF9C4; border: 1px solid #F9A825; }
+  .sr-div { width: 1px; background: #3a4f7a; height: 28px; }
+</style>
+
+<div class="sticky-ref">
+  <span class="sr-title">📌 Reference</span>
+  <span class="sr-chip sr-ok">np.sort(a) → NEW copy ✓ (safe)</span>
+  <div class="sr-div"></div>
+  <span class="sr-chip sr-err">a.sort() → IN-PLACE ✗ (overwrites!)</span>
+  <div class="sr-div"></div>
+  <span class="sr-chip sr-hl">[::-1] → descending order</span>
+</div>
+
+<h2 style="font-size:16px;font-weight:500;color:#111;margin-bottom:.75rem;">1D Sorting — np.sort()</h2>
+
+<div class="btn-row">
+  <button class="primary" id="playBtn">▶ Play</button>
+  <button id="stepBtn">Step →</button>
+  <button id="resetBtn">↺ Reset</button>
+  <span style="font-size:12px;color:#888;">Speed:</span>
+  <select id="speedSel">
+    <option value="900">Slow</option>
+    <option value="500" selected>Normal</option>
+    <option value="180">Fast</option>
+  </select>
+  <span id="phaseLabel" style="font-size:12px;color:#aaa;margin-left:4px;"></span>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+<div class="step-info" id="stepInfo">Edit the array below, then press Play.</div>
+
+<!-- Sec 1 -->
+<div class="sec" id="sec1" style="opacity:1;">
+  <div class="sec-label">Step 1 — build your array</div>
+  <div class="builder-row">
+    <label>Presets:</label>
+    <button class="preset-btn" onclick="loadPreset('default')">Default</button>
+    <button class="preset-btn" onclick="loadPreset('random')">Random</button>
+    <button class="preset-btn" onclick="loadPreset('reverse')">Reverse sorted</button>
+  </div>
+  <div style="overflow-x:auto;">
+    <div class="edit-col-hdrs" id="editColHdrs"></div>
+    <div style="margin-bottom:10px;"><div class="edit-row" id="editRow"></div></div>
+  </div>
+  <div class="codebl" id="cb1" style="opacity:1;">
+    <span class="codeline" id="cl1a">a = np.array([4, 7, 0, 3, 8, 2, 5, 1, 6, 9])</span>
+    <span class="codeline"><span class="cm"># b = np.sort(a)  — returns a NEW sorted copy</span></span>
+  </div>
+</div>
+
+<!-- Sec 2 -->
+<div class="sec" id="sec2">
+  <div class="sec-label">Step 2 — before: unsorted array</div>
+  <div class="codebl" id="cb2">
+    <span class="codeline" id="cl2a">a = np.array([<span class="idx" id="cl2vals">4, 7, 0, 3, 8, 2, 5, 1, 6, 9</span>])</span>
+    <span class="codeline" id="cl2b"><span class="cm"># elements are in random order — not sorted</span></span>
+  </div>
+  <div class="scan-pill sp-hl" id="pill2">&nbsp;</div>
+  <div class="arr-wrap"><div class="arr-row" id="arr2"></div></div>
+  <div class="rcards">
+    <div class="rcard rc-hl" id="rc21"><div class="rc-expr" id="rc21expr">a = [4,7,0,3,8,2,5,1,6,9]</div><div class="rc-desc">10 elements — unsorted. np.sort() will arrange ascending.</div></div>
+  </div>
+</div>
+
+<!-- Sec 3 -->
+<div class="sec" id="sec3">
+  <div class="sec-label">Step 3 — b = np.sort(a): returns a sorted copy</div>
+  <div class="codebl" id="cb3">
+    <span class="codeline" id="cl3a">b = np.sort(a)   <span class="cm"># returns a NEW sorted array</span></span>
+    <span class="codeline" id="cl3b"><span class="cm"># a is unchanged — np.sort is safe!</span></span>
+    <span class="codeline" id="cl3c"><span class="out" id="cl3out">b →  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]</span></span>
+  </div>
+  <div class="scan-pill sp-ok" id="pill3">&nbsp;</div>
+  <div class="arr-wrap"><div class="arr-row" id="arr3"></div></div>
+  <div class="rcards">
+    <div class="rcard rc-ok" id="rc31"><div class="rc-expr" id="rc31expr">b = [0,1,2,3,4,5,6,7,8,9]</div><div class="rc-desc">Sorted ascending — default behaviour of np.sort().</div></div>
+  </div>
+</div>
+
+<!-- Sec 4 -->
+<div class="sec" id="sec4">
+  <div class="sec-label">Step 4 — np.sort(a) vs a.sort(): key difference</div>
+  <div class="codebl" id="cb4">
+    <span class="codeline" id="cl4a">b = np.sort(a)   <span class="out">→  returns NEW array, a unchanged ✓</span></span>
+    <span class="codeline" id="cl4b">a.sort()         <span class="err">→  modifies a IN-PLACE, original lost ✗</span></span>
+    <span class="codeline" id="cl4c">b = np.sort(a)[::-1]   <span class="cm"># descending — reverse the result</span></span>
+  </div>
+  <div class="rcards">
+    <div class="rcard rc-ok"  id="rc41"><div class="rc-expr">np.sort(a) — Safe ✓</div><div class="rc-desc">Returns a NEW sorted array. Original a stays unchanged.</div></div>
+    <div class="rcard rc-err" id="rc42"><div class="rc-expr">a.sort() — In-place ✗</div><div class="rc-desc">Modifies a directly. Original data is overwritten!</div></div>
+    <div class="rcard rc-hl"  id="rc43"><div class="rc-expr" id="rc43expr">Descending: np.sort(a)[::-1]</div><div class="rc-desc">Reverse the sorted result to get descending order.</div></div>
+  </div>
+</div>
+
+<script>
+const PRESETS = {
+  default: [4,7,0,3,8,2,5,1,6,9],
+  reverse: [9,8,7,6,5,4,3,2,1,0],
+};
+let DATA=[...PRESETS.default];
+
+function loadPreset(name){
+  if(name==='random') DATA=Array.from({length:10},()=>Math.floor(Math.random()*20));
+  else DATA=[...PRESETS[name]];
+  buildEditGrid(); updateCode1(); reset();
+}
+
+function buildEditGrid(){
+  const n=DATA.length;
+  const hdrs=document.getElementById('editColHdrs'); hdrs.innerHTML='';
+  for(let i=0;i<n;i++){const h=document.createElement('div');h.className='edit-col-hdr';h.textContent=`[${i}]`;hdrs.appendChild(h);}
+  const row=document.getElementById('editRow'); row.innerHTML='';
+  const lbl=document.createElement('div'); lbl.className='edit-lbl'; lbl.textContent='a'; row.appendChild(lbl);
+  for(let i=0;i<n;i++){
+    const inp=document.createElement('input');
+    inp.className='edit-cell'; inp.type='number'; inp.id=`ec${i}`; inp.value=DATA[i];
+    inp.addEventListener('input',()=>{DATA[i]=parseInt(inp.value)||0;updateCode1();});
+    row.appendChild(inp);
+  }
+}
+function updateCode1(){document.getElementById('cl1a').textContent=`a = np.array([${DATA.join(', ')}])`;}
+
+function getSorted(){return [...DATA].sort((a,b)=>a-b);}
+
+function updateAllDynamic(){
+  const sorted=getSorted(), desc=[...sorted].reverse();
+  document.getElementById('cl2vals').textContent=DATA.join(', ');
+  document.getElementById('cl3out').innerHTML=`<span class="out">b →  [${sorted.join(', ')}]</span>`;
+  document.getElementById('rc21expr').textContent=`a = [${DATA.join(', ')}]`;
+  document.getElementById('rc31expr').textContent=`b = [${sorted.join(', ')}]`;
+  document.getElementById('rc43expr').textContent=`Descending: [${desc.join(', ')}]`;
+}
+
+function makeRow(cid, vals, cls){
+  const cont=document.getElementById(cid); cont.innerHTML='';
+  vals.forEach(v=>{const c=document.createElement('div');c.className=`cell ${cls}`;c.textContent=v;cont.appendChild(c);});
+}
+
+function buildSteps(){
+  const sorted=getSorted();
+  return [
+    {s:'sec1',t:'build',info:'Array ready. Press Step to begin.'},
+    {s:'sec2',t:'sec',info:'Step 2: This is the unsorted array — elements are in random order.'},
+    {s:'sec2',t:'cb',id:'cb2',line:'cl2a',info:`a = [${DATA.join(', ')}] — ${DATA.length} elements, unsorted.`},
+    ...DATA.map((v,i)=>({s:'sec2',t:'highlightCell',cont:'arr2',i,line:'cl2b',info:`a[${i}] = ${v}`})),
+    {s:'sec2',t:'rcard',id:'rc21',info:'All elements scanned — unsorted confirmed.'},
+    {s:'sec3',t:'sec',info:'Step 3: b = np.sort(a) — creates a new sorted copy ascending.'},
+    {s:'sec3',t:'cb',id:'cb3',line:'cl3a',info:'np.sort() does NOT modify a — it returns a brand new sorted array.'},
+    ...sorted.map((v,i)=>({s:'sec3',t:'revealSorted',i,val:v,line:'cl3c',info:`Placing ${v} at position ${i} in sorted array.`})),
+    {s:'sec3',t:'rcard',id:'rc31',info:`Sorted result: [${sorted.join(', ')}] ✓`},
+    {s:'sec4',t:'sec',info:'Step 4: np.sort(a) vs a.sort() — one is safe, one overwrites.'},
+    {s:'sec4',t:'cb',id:'cb4',line:'cl4a',info:'np.sort(a) — safe. Returns a new array, a is untouched.'},
+    {s:'sec4',t:'rcard',id:'rc41',info:'np.sort(a) → safe to use, original preserved.'},
+    {s:'sec4',t:'line',line:'cl4b',info:'a.sort() — dangerous! Overwrites the original array in-place.'},
+    {s:'sec4',t:'rcard',id:'rc42',info:'a.sort() → in-place, original data is gone!'},
+    {s:'sec4',t:'line',line:'cl4c',info:`np.sort(a)[::-1] → descending: [${[...sorted].reverse().join(', ')}]`},
+    {s:'sec4',t:'rcard',id:'rc43',info:'Reverse slice [::-1] gives descending order.'},
+  ];
+}
+
+let STEPS=[], current=-1, playing=false, playTimer=null, built={};
+function getSpeed(){return parseInt(document.getElementById('speedSel').value);}
+function setInfo(t){document.getElementById('stepInfo').textContent=t;}
+function setPhase(t){document.getElementById('phaseLabel').textContent=t;}
+function setPct(s){document.getElementById('progressFill').style.width=Math.round(((s+1)/STEPS.length)*100)+'%';}
+function showEl(id){const e=document.getElementById(id);if(e)e.style.opacity='1';}
+function clrHL(sid){document.querySelectorAll(`#${sid} .codeline`).forEach(e=>e.classList.remove('hl'));}
+function hlLine(id){const e=document.getElementById(id);if(e)e.classList.add('hl');}
+function activeSection(id){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function applyStep(s){
+  setPct(s); const step=STEPS[s];
+  if(step.line){clrHL(step.s);hlLine(step.line);}
+  if(step.t==='build'){activeSection('sec1');setInfo(step.info);setPhase('Step 1');return;}
+  if(step.t==='sec'){
+    showEl(step.s);activeSection(step.s);
+    if(!built[step.s]){
+      if(step.s==='sec2') makeRow('arr2',DATA,'c-err');
+      if(step.s==='sec3'){
+        const cont=document.getElementById('arr3'); cont.innerHTML='';
+        getSorted().forEach((_,i)=>{const c=document.createElement('div');c.className='cell c-dim';c.id=`sc${i}`;c.textContent='';cont.appendChild(c);});
+      }
+      built[step.s]=true;
+    }
+    setInfo(step.info);setPhase('Step '+step.s.replace('sec',''));return;
+  }
+  if(step.t==='cb'){showEl(step.id);setInfo(step.info);return;}
+  if(step.t==='line'){setInfo(step.info);return;}
+  if(step.t==='rcard'){document.getElementById(step.id).classList.add('show');setInfo(step.info);return;}
+  if(step.t==='highlightCell'){
+    const cells=document.getElementById(step.cont).querySelectorAll('.cell');
+    cells[step.i].className='cell c-rowhl';
+    const pill=document.getElementById('pill2');
+    pill.className='scan-pill sp-hl';pill.style.opacity='1';
+    pill.textContent=`a[${step.i}] = ${DATA[step.i]}`;
+    setInfo(step.info);return;
+  }
+  if(step.t==='revealSorted'){
+    const cell=document.getElementById(`sc${step.i}`);
+    if(cell){cell.className='cell c-hit';cell.textContent=step.val;}
+    const pill=document.getElementById('pill3');
+    pill.className='scan-pill sp-ok';pill.style.opacity='1';
+    pill.textContent=`Position ${step.i} → ${step.val}`;
+    setInfo(step.info);return;
+  }
+}
+
+function initSim(){STEPS=buildSteps();updateAllDynamic();}
+function stepForward(){if(current>=STEPS.length-1)return;current++;applyStep(current);document.getElementById('stepBtn').disabled=current>=STEPS.length-1;}
+function startPlay(){if(current>=STEPS.length-1)reset();playing=true;document.getElementById('playBtn').textContent='⏸ Pause';document.getElementById('stepBtn').disabled=true;tick();}
+function tick(){if(!playing)return;if(current>=STEPS.length-1){stopPlay();return;}stepForward();playTimer=setTimeout(tick,getSpeed());}
+function stopPlay(){playing=false;clearTimeout(playTimer);document.getElementById('playBtn').textContent='▶ Play';document.getElementById('stepBtn').disabled=current>=STEPS.length-1;}
+function reset(){
+  stopPlay();current=-1;built={};initSim();
+  ['sec2','sec3','sec4'].forEach(id=>{const e=document.getElementById(id);if(e){e.style.opacity='0';e.classList.remove('active');}});
+  document.getElementById('sec1').classList.remove('active');
+  ['cb2','cb3','cb4'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.opacity='0';});
+  ['rc21','rc31','rc41','rc42','rc43'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('show');});
+  ['pill2','pill3'].forEach(id=>{const e=document.getElementById(id);if(e){e.style.opacity='0';e.textContent='';}});
+  ['arr2','arr3'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='';});
+  document.querySelectorAll('.codeline').forEach(e=>e.classList.remove('hl'));
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('phaseLabel').textContent='';
+  document.getElementById('stepInfo').textContent='Edit the array below, then press Play.';
+  document.getElementById('stepBtn').disabled=false;document.getElementById('playBtn').textContent='▶ Play';
+}
+document.getElementById('playBtn').addEventListener('click',()=>{if(playing)stopPlay();else startPlay();});
+document.getElementById('stepBtn').addEventListener('click',stepForward);
+document.getElementById('resetBtn').addEventListener('click',reset);
+buildEditGrid();updateCode1();reset();
+</script>
