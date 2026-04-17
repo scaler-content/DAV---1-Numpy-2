@@ -1,0 +1,412 @@
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f7f7fb; padding: 1.25rem; }
+  .btn-row { display: flex; gap: 8px; margin-bottom: .75rem; flex-wrap: wrap; align-items: center; }
+  button { font-size: 13px; padding: 6px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; cursor: pointer; }
+  button:hover { background: #f0f0f0; }
+  button.primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+  button.primary:hover { background: #0C447C; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  select { font-size: 13px; padding: 4px 10px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; }
+  .progress-bar { height: 4px; background: #E6F1FB; border-radius: 2px; margin-bottom: .75rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: #185FA5; border-radius: 2px; transition: width 0.3s; }
+  .step-info { font-size: 13px; color: #0C447C; background: #E6F1FB; border: 1px solid #85B7EB; border-radius: 8px; padding: 9px 16px; margin-bottom: 1rem; min-height: 36px; text-align: center; line-height: 1.5; }
+
+  .sec { background: #fff; border-radius: 14px; border: 0.5px solid #e0e0e0; padding: 1rem 1.25rem; margin-bottom: .75rem; opacity: 0; transition: opacity 0.5s, border-color 0.3s; }
+  .sec.active { border-color: #185FA5; box-shadow: 0 0 0 3px #E6F1FB; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #185FA5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  /* Builder */
+  .builder-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; background: #f0f5ff; border-radius: 10px; border: 1px solid #c5d8f5; }
+  .builder-row label { font-size: 12px; color: #185FA5; font-weight: 600; }
+  .dim-sel { font-size: 13px; padding: 4px 10px; border-radius: 7px; border: 1.5px solid #85B7EB; color: #0C447C; font-weight: 600; background: #fff; width: 60px; }
+  .build-btn { font-size: 12px; padding: 5px 16px; border-radius: 7px; background: #185FA5; color: #fff; border: none; cursor: pointer; }
+  .build-btn:hover { background: #0C447C; }
+  .preset-btn { font-size: 11px; padding: 3px 10px; border-radius: 6px; border: 1px solid #85B7EB; background: #E6F1FB; color: #0C447C; cursor: pointer; }
+  .preset-btn:hover { background: #B5D4F4; }
+  .cond-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .cond-row label { font-size: 12px; color: #185FA5; font-weight: 600; }
+  .cond-sel { font-size: 13px; padding: 4px 10px; border-radius: 7px; border: 1.5px solid #85B7EB; color: #0C447C; font-weight: 600; background: #fff; }
+  .edit-col-hdrs { display: flex; gap: 5px; margin-left: 48px; margin-bottom: 3px; }
+  .edit-col-hdr  { width: 54px; text-align: center; font-size: 10px; color: #999; font-weight: 500; }
+  .edit-grid { display: inline-flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+  .edit-row  { display: flex; align-items: center; gap: 5px; }
+  .edit-lbl  { width: 42px; font-size: 10px; color: #999; text-align: right; padding-right: 6px; }
+  .edit-cell { width: 54px; height: 48px; border-radius: 8px; border: 2px solid #85B7EB; background: #E6F1FB; color: #0C447C; font-size: 15px; font-weight: 700; text-align: center; cursor: pointer; }
+  .edit-cell:focus { outline: none; border-color: #185FA5; background: #fff; }
+
+  /* Code: white bg, black text */
+  .codebl { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px 4px; font-family: monospace; font-size: 12.5px; line-height: 1.85; overflow-x: auto; opacity: 0; transition: opacity 0.5s; margin-bottom: 10px; }
+  .codeline { padding: 2px 12px; border-radius: 3px; white-space: pre; color: #111; display: block; transition: background 0.3s; }
+  .codeline.hl { background: #FFF9C4; border-left: 3px solid #F9A825; padding-left: 9px; }
+  .cm  { color: #888; }
+  .out { color: #1B5E20; font-weight: 600; }
+  .idx { color: #185FA5; font-weight: 700; }
+
+  /* Grid */
+  .hdr-row  { display: flex; gap: 5px; margin-left: 48px; margin-bottom: 4px; }
+  .hdr-cell { width: 56px; text-align: center; font-size: 10px; color: #999; font-weight: 500; }
+  .data-row { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+  .row-label{ width: 42px; text-align: right; font-size: 10px; color: #999; font-weight: 500; padding-right: 6px; flex-shrink: 0; }
+  .cell { width: 56px; height: 52px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; border: 2px solid; transition: all 0.3s; }
+  .c-blue  { background: #E6F1FB; color: #0C447C; border-color: #378ADD; }
+  .c-dim   { background: #f9f9f9; color: #ccc; border-color: #eee; }
+  .c-scan  { background: #FFF9C4; color: #7B6000; border-color: #F9A825; transform: scale(1.1); }
+  .c-true  { background: #E8F5E9; color: #1B5E20; border-color: #43A047; }
+  .c-false { background: #f5f5f5; color: #bbb; border-color: #ddd; }
+  .c-ok    { background: #E8F5E9; color: #1B5E20; border-color: #43A047; transform: scale(1.08); }
+
+  /* Scan pill */
+  .scan-pill { font-size: 14px; font-weight: 500; border-radius: 7px; padding: 6px 14px; display: inline-block; margin-bottom: 8px; min-height: 32px; opacity: 0; transition: opacity 0.3s; }
+  .sp-hl { background: #FFF9C4; color: #7B6000; border: 1px solid #F9A825; }
+  .sp-ok { background: #E8F5E9; color: #1B5E20; border: 1px solid #81C784; }
+  .sp-err{ background: #FFEBEE; color: #B71C1C; border: 1px solid #EF9A9A; }
+
+  /* Result chips */
+  .chips-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  .chip { width: 56px; height: 52px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; background: #E8F5E9; color: #1B5E20; border: 2px solid #43A047; opacity: 0; transform: scale(0.7); transition: opacity 0.35s, transform 0.35s; }
+  .chip.show { opacity: 1; transform: scale(1); }
+
+  /* Result cards */
+  .rcard { border-radius: 10px; padding: 10px 14px; border: 2px solid; opacity: 0; transition: opacity 0.5s; margin-bottom: 8px; }
+  .rcard.show { opacity: 1; }
+  .rc-ok { background: #E8F5E9; border-color: #43A047; }
+  .rc-ok .rc-expr { color: #1B5E20; } .rc-ok .rc-desc { color: #2E7D32; }
+  .rc-hl { background: #FFF9C4; border-color: #F9A825; }
+  .rc-hl .rc-expr { color: #7B6000; } .rc-hl .rc-desc { color: #7B6000; }
+  .rc-expr { font-family: monospace; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .rc-desc { font-size: 12px; line-height: 1.5; }
+</style>
+
+<h2 style="font-size:16px;font-weight:500;color:#111;margin-bottom:.75rem;">Masking in 2D arrays — m1[condition]</h2>
+
+<div class="btn-row">
+  <button class="primary" id="playBtn">▶ Play</button>
+  <button id="stepBtn">Step →</button>
+  <button id="resetBtn">↺ Reset</button>
+  <span style="font-size:12px;color:#888;">Speed:</span>
+  <select id="speedSel">
+    <option value="900">Slow</option>
+    <option value="500" selected>Normal</option>
+    <option value="180">Fast</option>
+  </select>
+  <span id="phaseLabel" style="font-size:12px;color:#aaa;margin-left:4px;"></span>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+<div class="step-info" id="stepInfo">Edit the array and condition, then press Play.</div>
+
+<!-- Sec 1: Builder -->
+<div class="sec" id="sec1" style="opacity:1;">
+  <div class="sec-label">Step 1 — build your array</div>
+  <div class="builder-row">
+    <label>Rows:</label>
+    <select class="dim-sel" id="selRows"><option>2</option><option selected>3</option><option>4</option></select>
+    <label>Cols:</label>
+    <select class="dim-sel" id="selCols"><option>2</option><option>3</option><option selected>4</option><option>5</option></select>
+    <button class="build-btn" id="applyDims">Resize</button>
+    <button class="preset-btn" onclick="loadPreset('default')">Default (3×4)</button>
+    <button class="preset-btn" onclick="loadPreset('rand')">Random</button>
+    <div class="cond-row">
+      <label>Condition:</label>
+      <select class="cond-sel" id="condSel">
+        <option value="lt6">m1 &lt; 6</option>
+        <option value="gt5">m1 &gt; 5</option>
+        <option value="even">m1 % 2 == 0</option>
+        <option value="gte4lte9">4 &lt;= m1 &lt;= 9</option>
+      </select>
+    </div>
+  </div>
+  <div class="edit-col-hdrs" id="editColHdrs"></div>
+  <div class="edit-grid" id="editGrid"></div>
+  <div class="codebl" id="cb1" style="opacity:1;">
+    <span class="codeline" id="cl1code">m1 = np.array([[0,1,2,3],[4,5,6,7],[8,9,10,11]])</span>
+    <span class="codeline" id="cl1cond"><span class="cm"># condition: m1 &lt; 6</span></span>
+  </div>
+</div>
+
+<!-- Sec 2: Boolean mask -->
+<div class="sec" id="sec2">
+  <div class="sec-label">Step 2 — boolean mask: T = keep, F = drop</div>
+  <div class="codebl" id="cb2">
+    <span class="codeline" id="cl2a"><span class="cm"># check every value against the condition</span></span>
+    <span class="codeline" id="cl2b">mask = m1 <span class="idx" id="condLabel">&lt; 6</span></span>
+    <span class="codeline" id="cl2c"><span class="out" id="maskOut">→  array([[T,T,T,T],[T,T,F,F],[F,F,F,F]])</span></span>
+  </div>
+  <div class="scan-pill sp-hl" id="pill2">&nbsp;</div>
+  <div class="hdr-row" id="hdr2"></div>
+  <div id="grid2"></div>
+</div>
+
+<!-- Sec 3: Apply mask -->
+<div class="sec" id="sec3">
+  <div class="sec-label">Step 3 — apply mask: keep only True values</div>
+  <div class="codebl" id="cb3">
+    <span class="codeline" id="cl3a"><span class="cm"># apply mask back to original array</span></span>
+    <span class="codeline" id="cl3b">m1[<span class="idx" id="exprLabel">m1 &lt; 6</span>]</span>
+    <span class="codeline" id="cl3c"><span class="out" id="resultOut">→  array([0,1,2,3,4,5])</span></span>
+  </div>
+  <div class="scan-pill sp-hl" id="pill3">&nbsp;</div>
+  <div class="hdr-row" id="hdr3"></div>
+  <div id="grid3"></div>
+</div>
+
+<!-- Sec 4: 1D Result -->
+<div class="sec" id="sec4">
+  <div class="sec-label">Step 4 — result (1D): only True values kept</div>
+  <div class="codebl" id="cb4">
+    <span class="codeline" id="cl4a">m1[<span class="idx" id="exprLabel2">m1 &lt; 6</span>]  <span class="out" id="finalOut">→  array([0,1,2,3,4,5])</span></span>
+    <span class="codeline" id="cl4b"><span class="cm"># masking always returns a 1D array — 2D structure is flattened</span></span>
+  </div>
+  <div class="chips-row" id="chipsRow"></div>
+  <div class="rcard rc-ok" id="rc4" style="margin-top:4px;">
+    <div class="rc-expr" id="rc4expr">m1[m1 &lt; 6]  →  array([0,1,2,3,4,5])</div>
+    <div class="rc-desc">Masking always returns a 1D array — the 2D structure is flattened.</div>
+  </div>
+</div>
+
+<script>
+const CONDITIONS = {
+  lt6:     { label:'< 6',          expr:'m1 < 6',          fn: v => v < 6  },
+  gt5:     { label:'> 5',          expr:'m1 > 5',          fn: v => v > 5  },
+  even:    { label:'% 2 == 0',     expr:'m1 % 2 == 0',     fn: v => v%2===0 },
+  gte4lte9:{ label:'>= 4 and <= 9',expr:'(m1>=4) & (m1<=9)',fn: v => v>=4&&v<=9 },
+};
+
+let DATA=[[0,1,2,3],[4,5,6,7],[8,9,10,11]], R=3, C=4, COND='lt6';
+
+// ── Builder ───────────────────────────────────────────────
+function buildEditGrid(){
+  R=parseInt(document.getElementById('selRows').value);
+  C=parseInt(document.getElementById('selCols').value);
+  const hdrs=document.getElementById('editColHdrs'); hdrs.innerHTML='';
+  const dummy=document.createElement('div'); dummy.style.cssText='width:48px;flex-shrink:0;'; hdrs.appendChild(dummy);
+  for(let c=0;c<C;c++){ const h=document.createElement('div'); h.className='edit-col-hdr'; h.textContent='col '+c; hdrs.appendChild(h); }
+  const grid=document.getElementById('editGrid'); grid.innerHTML='';
+  for(let r=0;r<R;r++){
+    const row=document.createElement('div'); row.className='edit-row';
+    const lbl=document.createElement('div'); lbl.className='edit-lbl'; lbl.textContent='row '+r; row.appendChild(lbl);
+    for(let c=0;c<C;c++){
+      const inp=document.createElement('input'); inp.className='edit-cell'; inp.type='number'; inp.id=`ec${r}${c}`;
+      inp.value=(DATA[r]&&DATA[r][c]!==undefined)?DATA[r][c]:r*C+c;
+      inp.addEventListener('input',updateCodePreview);
+      row.appendChild(inp);
+    }
+    grid.appendChild(row);
+  }
+  updateCodePreview();
+}
+
+function updateCodePreview(){
+  const rows=[];
+  for(let r=0;r<R;r++){ const row=[]; for(let c=0;c<C;c++){ const el=document.getElementById(`ec${r}${c}`); row.push(el?parseInt(el.value)||0:0); } rows.push('['+row.join(',')+']'); }
+  document.getElementById('cl1code').textContent=`m1 = np.array([${rows.join(',')}])`;
+  const cond=CONDITIONS[document.getElementById('condSel').value];
+  document.getElementById('cl1cond').innerHTML=`<span class="cm"># condition: ${cond.expr}</span>`;
+}
+
+function readData(){
+  COND=document.getElementById('condSel').value;
+  DATA=[];
+  for(let r=0;r<R;r++){ DATA[r]=[]; for(let c=0;c<C;c++){ const el=document.getElementById(`ec${r}${c}`); DATA[r][c]=el?parseInt(el.value)||0:0; } }
+}
+
+function loadPreset(t){
+  if(t==='default'){ document.getElementById('selRows').value=3; document.getElementById('selCols').value=4; buildEditGrid(); for(let r=0;r<3;r++) for(let c=0;c<4;c++){ const el=document.getElementById(`ec${r}${c}`); if(el) el.value=r*4+c; } }
+  if(t==='rand')   { buildEditGrid(); for(let r=0;r<R;r++) for(let c=0;c<C;c++){ const el=document.getElementById(`ec${r}${c}`); if(el) el.value=Math.floor(Math.random()*20); } }
+  updateCodePreview();
+}
+
+document.getElementById('applyDims').addEventListener('click',buildEditGrid);
+document.getElementById('condSel').addEventListener('change',updateCodePreview);
+buildEditGrid();
+
+// ── Derived data ──────────────────────────────────────────
+function getMask(){ return DATA.map(row=>row.map(v=>CONDITIONS[COND].fn(v))); }
+function getKept(){ const r=[]; DATA.forEach(row=>row.forEach(v=>{ if(CONDITIONS[COND].fn(v)) r.push(v); })); return r; }
+function maskStr(mask){ return 'array(['+mask.map(row=>'['+row.map(v=>v?'T':'F').join(',')+']').join(',')+'])'; }
+
+function updateDynamic(){
+  const cond=CONDITIONS[COND];
+  const mask=getMask(), kept=getKept();
+  document.getElementById('condLabel').textContent=cond.label;
+  document.getElementById('exprLabel').textContent=cond.expr;
+  document.getElementById('exprLabel2').textContent=cond.expr;
+  document.getElementById('maskOut').textContent='→  '+maskStr(mask);
+  const resultStr=`→  array([${kept.join(',')}])`;
+  document.getElementById('resultOut').textContent=resultStr;
+  document.getElementById('finalOut').textContent=resultStr;
+  document.getElementById('rc4expr').textContent=`m1[${cond.expr}]  →  array([${kept.join(',')}])`;
+}
+
+// ── Grid helpers ──────────────────────────────────────────
+function makeHdrs(id){ const el=document.getElementById(id); el.innerHTML=''; el.className='hdr-row'; for(let c=0;c<C;c++){ const h=document.createElement('div'); h.className='hdr-cell'; h.textContent='col '+c; el.appendChild(h); } }
+function makeGrid(id,pfx,cls='c-dim',textFn=null){ const cont=document.getElementById(id); cont.innerHTML=''; DATA.forEach((row,r)=>{ const wrap=document.createElement('div'); wrap.className='data-row'; const lbl=document.createElement('div'); lbl.className='row-label'; lbl.textContent='row '+r; wrap.appendChild(lbl); row.forEach((v,c)=>{ const cell=document.createElement('div'); cell.className=`cell ${cls}`; cell.id=`${pfx}${r}${c}`; cell.textContent=textFn?textFn(v,r,c):v; wrap.appendChild(cell); }); cont.appendChild(wrap); }); }
+function getCell(pfx,r,c){ return document.getElementById(`${pfx}${r}${c}`); }
+
+function clrHL(secId){ document.querySelectorAll(`#${secId} .codeline`).forEach(e=>e.classList.remove('hl')); }
+function hlLine(id){ const e=document.getElementById(id); if(e) e.classList.add('hl'); }
+function showEl(id){ const e=document.getElementById(id); if(e) e.style.opacity='1'; }
+function activeSection(id){ document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function setPill(id,cls,txt){ const p=document.getElementById(id); if(!p) return; p.className=`scan-pill ${cls}`; p.style.opacity='1'; p.textContent=txt; }
+function hidePill(id){ const p=document.getElementById(id); if(p) p.style.opacity='0'; }
+
+// ── Steps ─────────────────────────────────────────────────
+let STEPS=[], current=-1, playing=false, playTimer=null, scanTimer=null, built={};
+
+function buildSteps(){
+  const mask=getMask(), kept=getKept(), cond=CONDITIONS[COND];
+  const total=R*C;
+
+  STEPS=[
+    // Sec 1
+    {s:'sec1', t:'build', info:'Array ready. Press Step to start.'},
+    // Sec 2: build mask cell by cell
+    {s:'sec2', t:'sec',  info:`Step 2: NumPy checks every value — is it ${cond.expr}?`},
+    {s:'sec2', t:'cb',   id:'cb2', line:'cl2a', info:`Condition: ${cond.expr} — checks each cell and returns True or False.`},
+    // individual cell scan steps
+    ...Array.from({length:total},(_,i)=>({
+      s:'sec2', t:'maskCell', i, line:'cl2b',
+      info:`[${Math.floor(i/C)},${i%C}] = ${DATA[Math.floor(i/C)][i%C]} ${cond.expr.replace('m1','')} → ${mask[Math.floor(i/C)][i%C]?'True ✓ keep':'False ✗ drop'}`
+    })),
+    {s:'sec2', t:'maskDone', line:'cl2c', info:`Mask complete. ${kept.length} values are True (keep), ${total-kept.length} are False (drop).`},
+    // Sec 3: apply mask cell by cell
+    {s:'sec3', t:'sec',  info:'Step 3: Apply the mask — True = keep value, False = cross out.'},
+    {s:'sec3', t:'cb',   id:'cb3', line:'cl3a', info:`m1[${cond.expr}] — use the mask to filter the original array.`},
+    ...Array.from({length:total},(_,i)=>({
+      s:'sec3', t:'applyCell', i, line:'cl3b',
+      info:`[${Math.floor(i/C)},${i%C}]: mask=${mask[Math.floor(i/C)][i%C]?'True → keep':'False → drop'} value ${DATA[Math.floor(i/C)][i%C]}.`
+    })),
+    {s:'sec3', t:'applyDone', line:'cl3c', info:`All True values collected: [${kept.join(', ')}]. Now flattening to 1D.`},
+    // Sec 4: chips + result
+    {s:'sec4', t:'sec',  info:'Step 4: Kept values are flattened into a 1D result array.'},
+    {s:'sec4', t:'cb',   id:'cb4', line:'cl4a', info:`m1[${cond.expr}] returns a 1D array — 2D structure is always flattened.`},
+    ...kept.map((v,k)=>({ s:'sec4', t:'chip', i:k, v, line:'cl4a', info:`Value ${v} added to result array (${k+1} of ${kept.length}).` })),
+    {s:'sec4', t:'rcard', id:'rc4', line:'cl4b', info:'Done! Masking always returns 1D — the grid structure is flattened.'},
+  ];
+}
+
+function applyStep(s){
+  const total=R*C;
+  setPct(s);
+  const step=STEPS[s];
+  if(step.line){ clrHL(step.s); hlLine(step.line); }
+  const mask=getMask(), kept=getKept(), cond=CONDITIONS[COND];
+
+  if(step.t==='build'){ readData(); updateDynamic(); activeSection('sec1'); setInfo(step.info); setPhase('Step 1'); return; }
+
+  if(step.t==='sec'){
+    showEl(step.s); activeSection(step.s);
+    if(!built[step.s]){
+      if(step.s==='sec2'){ makeHdrs('hdr2'); makeGrid('grid2','g2','c-dim'); }
+      if(step.s==='sec3'){ makeHdrs('hdr3'); makeGrid('grid3','g3','c-dim'); }
+      built[step.s]=true;
+    }
+    setInfo(step.info); setPhase('Step '+step.s.replace('sec','')); return;
+  }
+
+  if(step.t==='cb'){ showEl(step.id); setInfo(step.info); return; }
+
+  if(step.t==='maskCell'){
+    const r=Math.floor(step.i/C), c=step.i%C, v=DATA[r][c], keep=mask[r][c];
+    // dim all not yet visited, mark previous
+    for(let ri=0;ri<R;ri++) for(let ci=0;ci<C;ci++){
+      const idx=ri*C+ci, e=getCell('g2',ri,ci); if(!e) continue;
+      if(idx<step.i){ const m=mask[ri][ci]; e.className=`cell ${m?'c-true':'c-false'}`; e.textContent=m?'T':'F'; }
+      else if(idx===step.i){ e.className='cell c-scan'; e.textContent=keep?'T':'F'; }
+      else { e.className='cell c-dim'; e.textContent=''; }
+    }
+    setPill('pill2', keep?'sp-ok':'sp-err', `[${r},${c}] = ${v} ${cond.expr.replace('m1','')} → ${keep?'True ✓':'False ✗'}`);
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='maskDone'){
+    for(let ri=0;ri<R;ri++) for(let ci=0;ci<C;ci++){
+      const e=getCell('g2',ri,ci); if(!e) continue;
+      const m=mask[ri][ci]; e.className=`cell ${m?'c-true':'c-false'}`; e.textContent=m?'T':'F';
+    }
+    hidePill('pill2');
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='applyCell'){
+    const r=Math.floor(step.i/C), c=step.i%C, v=DATA[r][c], keep=mask[r][c];
+    for(let ri=0;ri<R;ri++) for(let ci=0;ci<C;ci++){
+      const idx=ri*C+ci, e=getCell('g3',ri,ci); if(!e) continue;
+      const m=mask[ri][ci];
+      if(idx<step.i){ e.className=`cell ${m?'c-ok':'c-false'}`; e.textContent=m?DATA[ri][ci]:'✗'; }
+      else if(idx===step.i){ e.className='cell c-scan'; e.textContent=keep?v:'✗'; }
+      else { e.className='cell c-dim'; e.textContent=''; }
+    }
+    setPill('pill3', keep?'sp-ok':'sp-err', `[${r},${c}] mask=${keep?'True → keep '+v:'False → drop'}`);
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='applyDone'){
+    for(let ri=0;ri<R;ri++) for(let ci=0;ci<C;ci++){
+      const e=getCell('g3',ri,ci); if(!e) continue;
+      const m=mask[ri][ci]; e.className=`cell ${m?'c-ok':'c-false'}`; e.textContent=m?DATA[ri][ci]:'✗';
+    }
+    hidePill('pill3');
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='chip'){
+    if(step.i===0){
+      const ch=document.getElementById('chipsRow'); ch.innerHTML='';
+      getMask(); const k2=getKept();
+      k2.forEach((_,k)=>{ const el=document.createElement('div'); el.className='chip'; el.id='chip'+k; el.textContent=k2[k]; ch.appendChild(el); });
+    }
+    const chip=document.getElementById('chip'+step.i);
+    if(chip) requestAnimationFrame(()=>chip.classList.add('show'));
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='rcard'){ document.getElementById(step.id).classList.add('show'); setInfo(step.info); return; }
+}
+
+function setPct(s){ document.getElementById('progressFill').style.width=Math.round(((s+1)/STEPS.length)*100)+'%'; }
+function setInfo(t){ document.getElementById('stepInfo').textContent=t; }
+function setPhase(t){ document.getElementById('phaseLabel').textContent=t; }
+function getSpeed(){ return parseInt(document.getElementById('speedSel').value); }
+
+function stepForward(){
+  if(STEPS.length===0){ readData(); buildSteps(); }
+  if(current>=STEPS.length-1) return;
+  current++; applyStep(current);
+  document.getElementById('stepBtn').disabled=current>=STEPS.length-1;
+}
+function startPlay(){
+  if(STEPS.length===0||current>=STEPS.length-1){ hardReset(); }
+  if(STEPS.length===0){ readData(); buildSteps(); }
+  playing=true; document.getElementById('playBtn').textContent='⏸ Pause';
+  document.getElementById('stepBtn').disabled=true; tick();
+}
+function tick(){
+  if(!playing) return;
+  if(current>=STEPS.length-1){ stopPlay(); return; }
+  stepForward(); playTimer=setTimeout(tick,getSpeed());
+}
+function stopPlay(){ playing=false; clearTimeout(playTimer); document.getElementById('playBtn').textContent='▶ Play'; document.getElementById('stepBtn').disabled=current>=STEPS.length-1; }
+
+function hardReset(){
+  stopPlay(); if(scanTimer) clearInterval(scanTimer); current=-1; built={}; STEPS=[];
+  ['sec2','sec3','sec4'].forEach(id=>{ const e=document.getElementById(id); if(e){e.style.opacity='0';e.classList.remove('active');} });
+  document.getElementById('sec1').classList.remove('active');
+  ['cb2','cb3','cb4'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.opacity='0'; });
+  ['rc4'].forEach(id=>{ const e=document.getElementById(id); if(e) e.classList.remove('show'); });
+  ['pill2','pill3'].forEach(id=>{ const e=document.getElementById(id); if(e){e.style.opacity='0';e.textContent='';} });
+  ['grid2','hdr2','grid3','hdr3'].forEach(id=>{ const e=document.getElementById(id); if(e) e.innerHTML=''; });
+  document.getElementById('chipsRow').innerHTML='';
+  document.querySelectorAll('.codeline').forEach(e=>e.classList.remove('hl'));
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('phaseLabel').textContent='';
+  document.getElementById('stepInfo').textContent='Edit the array and condition, then press Play.';
+  document.getElementById('stepBtn').disabled=false;
+  document.getElementById('playBtn').textContent='▶ Play';
+}
+
+document.getElementById('playBtn').addEventListener('click',()=>{ if(playing) stopPlay(); else startPlay(); });
+document.getElementById('stepBtn').addEventListener('click',stepForward);
+document.getElementById('resetBtn').addEventListener('click',hardReset);
+hardReset();
+</script>
