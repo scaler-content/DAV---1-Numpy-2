@@ -1,0 +1,426 @@
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f7f7fb; padding: 1.25rem; }
+  .sticky-controls { position: sticky; top: 0; z-index: 101; background: #f7f7fb; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; margin-bottom: .75rem; }
+  .btn-row { display: flex; gap: 8px; margin-bottom: .75rem; flex-wrap: wrap; align-items: center; }
+  button { font-size: 13px; padding: 6px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; cursor: pointer; }
+  button:hover { background: #f0f0f0; }
+  button.primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+  button.primary:hover { background: #0C447C; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  select { font-size: 13px; padding: 4px 10px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; }
+  .progress-bar { height: 4px; background: #E6F1FB; border-radius: 2px; margin-bottom: .75rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: #185FA5; border-radius: 2px; transition: width 0.3s; }
+  .step-info { font-size: 13px; color: #0C447C; background: #E6F1FB; border: 1px solid #85B7EB; border-radius: 8px; padding: 9px 16px; min-height: 36px; text-align: center; line-height: 1.5; }
+
+  .sticky-ref { position: sticky; top: 0; z-index: 100; background: #1a2744; border-radius: 10px; padding: 10px 16px; margin-bottom: 1rem; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+  .sr-title { font-size: 11px; font-weight: 700; color: #aac4f0; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+  .sr-chip { border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; font-family: monospace; white-space: nowrap; }
+  .sr-ok  { background: #1B5E20; color: #C8E6C9; border: 1px solid #43A047; }
+  .sr-err { background: #7f1c1c; color: #FFCDD2; border: 1px solid #E53935; }
+  .sr-hl  { background: #7B6000; color: #FFF9C4; border: 1px solid #F9A825; }
+  .sr-div { width: 1px; background: #3a4f7a; height: 28px; }
+
+  .sec { background: #fff; border-radius: 14px; border: 0.5px solid #e0e0e0; padding: 1rem 1.25rem; margin-bottom: .75rem; opacity: 0; transition: opacity 0.5s, border-color 0.3s; }
+  .sec.active { border-color: #185FA5; box-shadow: 0 0 0 3px #E6F1FB; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #185FA5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  .builder-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; background: #f0f5ff; border-radius: 10px; border: 1px solid #c5d8f5; }
+  .builder-row label { font-size: 12px; color: #185FA5; font-weight: 600; }
+  .preset-btn { font-size: 11px; padding: 3px 10px; border-radius: 6px; border: 1px solid #85B7EB; background: #E6F1FB; color: #0C447C; cursor: pointer; }
+  .preset-btn:hover { background: #B5D4F4; }
+  .input-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .input-lbl { font-size: 12px; color: #555; font-weight: 600; min-width: 130px; }
+  .einp { width: 46px; height: 38px; border-radius: 7px; border: 2px solid #85B7EB; background: #E6F1FB; color: #0C447C; font-size: 13px; font-weight: 700; text-align: center; padding: 0; }
+  .einp:focus { outline: none; border-color: #185FA5; background: #fff; }
+
+  .codebl { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px 4px; font-family: monospace; font-size: 12.5px; line-height: 1.85; overflow-x: auto; opacity: 0; transition: opacity 0.5s; margin-bottom: 10px; }
+  .codeline { padding: 2px 12px; border-radius: 3px; white-space: pre; color: #111; display: block; transition: background 0.3s; }
+  .codeline.hl { background: #FFF9C4; border-left: 3px solid #F9A825; padding-left: 9px; }
+  .cm  { color: #888; }
+  .out { color: #1B5E20; font-weight: 600; }
+  .err { color: #B71C1C; font-weight: 600; }
+  .idx { color: #185FA5; font-weight: 700; }
+
+  .bc-eq { display: flex; align-items: flex-start; gap: 10px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; flex-wrap: nowrap; }
+  .bc-op { font-size: 24px; color: #aaa; flex-shrink: 0; margin-top: 68px; }
+  .grid-block { flex-shrink: 0; }
+  .grid-title { font-size: 11px; font-weight: 700; margin-bottom: 1px; }
+  .grid-sub   { font-size: 10px; color: #999; font-style: italic; margin-bottom: 4px; }
+  .g-row  { display: flex; gap: 4px; align-items: center; margin-bottom: 4px; }
+  .row-lbl { width: 32px; font-size: 10px; color: #bbb; text-align: right; padding-right: 4px; flex-shrink: 0; }
+  .cell { width: 50px; height: 46px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; transition: all 0.3s; }
+  .hdr-c { width: 50px; text-align: center; font-size: 10px; color: #bbb; }
+
+  .c-blue  { background: #E6F1FB; color: #0C447C; border: 2px solid #378ADD; }
+  .c-yel   { background: #FEF9E7; color: #7B6000; border: 2px solid #F9A825; }
+  .c-pu    { background: #F3E5F5; color: #6A1B9A; border: 2px solid #AB47BC; }
+  .c-hit   { background: #E8F5E9; color: #1B5E20; border: 2px solid #43A047; }
+  .c-rowhl { background: #FFF9C4; color: #7B6000; border: 2px solid #F9A825; }
+  .c-dim   { background: #f9f9f9; color: #ccc; border: 2px solid #e0e0e0; }
+  .c-blue-d { background: #EBF5FB; color: #7FB3D3; border: 2px dashed #85B7EB; }
+  .c-yel-d  { background: #FFFDE7; color: #D4AC0D; border: 2px dashed #F9A825; }
+  .c-pu-d   { background: #F8EFF9; color: #BB8FCE; border: 2px dashed #AB47BC; }
+
+  .scan-pill { font-size: 13px; font-weight: 500; border-radius: 7px; padding: 5px 14px; display: inline-block; margin-bottom: 8px; opacity: 0; transition: opacity 0.3s; min-height: 28px; }
+  .sp-hl { background: #FFF9C4; color: #7B6000; border: 1px solid #F9A825; }
+  .sp-ok { background: #E8F5E9; color: #1B5E20; border: 1px solid #81C784; }
+  .sp-pu { background: #F3E5F5; color: #6A1B9A; border: 1px solid #AB47BC; }
+
+  .rcards { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .rcard { border-radius: 10px; padding: 10px 14px; border: 2px solid; opacity: 0; transition: opacity 0.5s; }
+  .rcard.show { opacity: 1; }
+  .rc-ok  { background: #E8F5E9; border-color: #43A047; }
+  .rc-ok  .rc-expr { color: #1B5E20; } .rc-ok  .rc-desc { color: #2E7D32; }
+  .rc-err { background: #FFEBEE; border-color: #E53935; }
+  .rc-err .rc-expr { color: #B71C1C; } .rc-err .rc-desc { color: #C62828; }
+  .rc-hl  { background: #FFF9C4; border-color: #F9A825; }
+  .rc-hl  .rc-expr { color: #7B6000; } .rc-hl  .rc-desc { color: #7B6000; }
+  .rc-expr { font-family: monospace; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .rc-desc { font-size: 12px; line-height: 1.5; }
+</style>
+
+<div class="sticky-controls">
+  <div class="btn-row">
+    <button class="primary" id="playBtn">▶ Play</button>
+    <button id="stepBtn">Step →</button>
+    <button id="resetBtn">↺ Reset</button>
+    <span style="font-size:12px;color:#888;">Speed:</span>
+    <select id="speedSel">
+      <option value="900">Slow</option>
+      <option value="500" selected>Normal</option>
+      <option value="180">Fast</option>
+    </select>
+    <span id="phaseLabel" style="font-size:12px;color:#aaa;margin-left:4px;"></span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="step-info" id="stepInfo">Set up your arrays below, then press Play.</div>
+</div>
+
+<div class="sticky-ref">
+  <span class="sr-title">📌 Reference</span>
+  <span class="sr-chip sr-ok">solid border = original data</span>
+  <div class="sr-div"></div>
+  <span class="sr-chip sr-hl">dashed border = NumPy auto-copied</span>
+  <div class="sr-div"></div>
+  <span class="sr-chip sr-err">dims not 1 or equal → ValueError</span>
+</div>
+
+<h2 style="font-size:16px;font-weight:500;color:#111;margin-bottom:.75rem;">Broadcasting — NumPy automatically repeats the small array</h2>
+
+<!-- Sec 1 -->
+<div class="sec" id="sec1" style="opacity:1;">
+  <div class="sec-label">Step 1 — set up your arrays</div>
+  <div class="builder-row">
+    <label>Presets:</label>
+    <button class="preset-btn" onclick="loadPreset('default')">Default</button>
+    <button class="preset-btn" onclick="loadPreset('alt')">Alt values</button>
+    <button class="preset-btn" onclick="loadPreset('random')">Random</button>
+  </div>
+  <div class="input-row">
+    <div class="input-lbl">Row base values (a/d):</div>
+    <input class="einp" id="rv0" type="number" value="0">
+    <input class="einp" id="rv1" type="number" value="10">
+    <input class="einp" id="rv2" type="number" value="20">
+    <input class="einp" id="rv3" type="number" value="30">
+  </div>
+  <div class="input-row">
+    <div class="input-lbl">Array c values:</div>
+    <input class="einp" id="cv0" type="number" value="0">
+    <input class="einp" id="cv1" type="number" value="1">
+    <input class="einp" id="cv2" type="number" value="2">
+  </div>
+  <div class="codebl" id="cb1" style="opacity:1;">
+    <span class="codeline" id="cl1a">a = np.array([[0,0,0],[10,10,10],[20,20,20],[30,30,30]])  # shape (4,3)</span>
+    <span class="codeline" id="cl1b">c = np.array([0, 1, 2])                                   # shape (3,)</span>
+    <span class="codeline" id="cl1c">d = np.array([[0],[10],[20],[30]])                        # shape (4,1)</span>
+  </div>
+</div>
+
+<!-- Sec 2 -->
+<div class="sec" id="sec2">
+  <div class="sec-label" id="sl2">Step 2 — Case 1: shape (4,3) + shape (3,) → 1D row repeated down 4 times</div>
+  <div class="codebl" id="cb2">
+    <span class="codeline" id="cl2a">result = a + c   <span class="cm"># c's 3 elements match a's 3 cols</span></span>
+    <span class="codeline" id="cl2b"><span class="cm"># NumPy stamps c across all 4 rows silently</span></span>
+    <span class="codeline" id="cl2c"><span class="out" id="cl2out">→  array([[0,1,2],[10,11,12],[20,21,22],[30,31,32]])</span></span>
+  </div>
+  <div class="scan-pill sp-hl" id="pill2">&nbsp;</div>
+  <div class="bc-eq">
+    <div class="grid-block">
+      <div class="grid-title" style="color:#185FA5;">Array a — shape (4,3)</div>
+      <div class="grid-sub">The large array</div>
+      <div id="g2a"></div>
+    </div>
+    <div class="bc-op">+</div>
+    <div class="grid-block">
+      <div class="grid-title" style="color:#7B6000;">Array c — shape (3,)</div>
+      <div class="grid-sub" style="color:#D4AC0D;">↑ NumPy repeats this row 4×</div>
+      <div id="g2c"></div>
+    </div>
+    <div class="bc-op">=</div>
+    <div class="grid-block">
+      <div class="grid-title" style="color:#1B5E20;">Result — shape (4,3)</div>
+      <div class="grid-sub">a[r,c] + c[c] at each position</div>
+      <div id="g2res"></div>
+    </div>
+  </div>
+  <div class="rcards">
+    <div class="rcard rc-ok" id="rc21"><div class="rc-expr">(4,3) + (3,) → shape (4,3) ✓</div><div class="rc-desc">3 cols match. NumPy repeats c down all 4 rows automatically.</div></div>
+    <div class="rcard rc-hl" id="rc22"><div class="rc-expr">Result shape = larger array's shape</div><div class="rc-desc">Broadcasting never changes the shape of the larger array.</div></div>
+  </div>
+</div>
+
+<!-- Sec 3 -->
+<div class="sec" id="sec3">
+  <div class="sec-label" id="sl3">Step 3 — Case 2: shape (4,1) + shape (3,) → BOTH arrays broadcast</div>
+  <div class="codebl" id="cb3">
+    <span class="codeline" id="cl3a">result = d + c   <span class="cm"># d=(4,1) repeats right · c=(3,) repeats down</span></span>
+    <span class="codeline" id="cl3b"><span class="cm"># d's 1 col → stretched to 3  ·  c's 1 row → stretched to 4</span></span>
+    <span class="codeline" id="cl3c"><span class="out" id="cl3out">→  array([[0,1,2],[10,11,12],[20,21,22],[30,31,32]])</span></span>
+  </div>
+  <div class="scan-pill sp-pu" id="pill3">&nbsp;</div>
+  <div class="bc-eq">
+    <div class="grid-block">
+      <div class="grid-title" style="color:#6A1B9A;">d — shape (4,1)</div>
+      <div class="grid-sub" style="color:#AB47BC;">→ NumPy repeats this column 3×</div>
+      <div id="g3d"></div>
+    </div>
+    <div class="bc-op">+</div>
+    <div class="grid-block">
+      <div class="grid-title" style="color:#7B6000;">c — shape (3,)</div>
+      <div class="grid-sub" style="color:#D4AC0D;">↑ NumPy repeats this row 4×</div>
+      <div id="g3c"></div>
+    </div>
+    <div class="bc-op">=</div>
+    <div class="grid-block">
+      <div class="grid-title" style="color:#1B5E20;">Result — shape (4,3)</div>
+      <div class="grid-sub">d[r,0] + c[c] at each position</div>
+      <div id="g3res"></div>
+    </div>
+  </div>
+  <div class="rcards">
+    <div class="rcard rc-ok" id="rc31"><div class="rc-expr">(4,1) + (3,) → shape (4,3) ✓</div><div class="rc-desc">Both stretch — d right ×3, c down ×4. Same result as Case 1!</div></div>
+    <div class="rcard rc-hl" id="rc32"><div class="rc-expr">BOTH arrays broadcast — dual stretch</div><div class="rc-desc">When a dim is 1, it always stretches to match the other's size.</div></div>
+  </div>
+</div>
+
+<!-- Sec 4 -->
+<div class="sec" id="sec4">
+  <div class="sec-label">Step 4 — when does broadcasting work?</div>
+  <div class="codebl" id="cb4">
+    <span class="codeline" id="cl4a"><span class="cm"># Rule: each dim must be EQUAL or one of them must be 1</span></span>
+    <span class="codeline" id="cl4b">a + c   <span class="out">→  ✓  (4,3)+(3,): 3==3, missing dim treated as 1</span></span>
+    <span class="codeline" id="cl4c">d + c   <span class="out">→  ✓  (4,1)+(3,): 1 stretches to 3, 1 stretches to 4</span></span>
+    <span class="codeline" id="cl4d">a + 5   <span class="out">→  ✓  scalar applies to every single cell</span></span>
+    <span class="codeline" id="cl4e">np.ones((2,4)) + np.ones((4,4))   <span class="err">→  ValueError! 2≠4, neither is 1</span></span>
+  </div>
+  <div class="rcards">
+    <div class="rcard rc-ok"  id="rc41"><div class="rc-expr">(4,3) + (3,) ✓</div><div class="rc-desc">1D row matches cols. Repeated down rows.</div></div>
+    <div class="rcard rc-ok"  id="rc42"><div class="rc-expr">(4,1) + (3,) ✓</div><div class="rc-desc">Both stretch. Result is (4,3).</div></div>
+    <div class="rcard rc-ok"  id="rc43"><div class="rc-expr">(4,3) + scalar ✓</div><div class="rc-desc">Scalar applies to every cell.</div></div>
+    <div class="rcard rc-err" id="rc44"><div class="rc-expr">(2,4) + (4,4) ✗  ValueError</div><div class="rc-desc">Rows: 2≠4 and neither is 1 → incompatible → Error!</div></div>
+  </div>
+</div>
+
+<script>
+const R=4, C=3;
+let rowVals=[0,10,20,30], cVals=[0,1,2];
+
+const getA=()=>rowVals.map(rv=>Array(C).fill(rv));
+const getD=()=>rowVals.map(rv=>[rv]);
+const getCV=()=>[...cVals];
+const getResult=()=>rowVals.map(rv=>cVals.map(cv=>rv+cv));
+
+function loadPreset(name){
+  if(name==='default'){rowVals=[0,10,20,30];cVals=[0,1,2];}
+  else if(name==='alt'){rowVals=[5,15,25,35];cVals=[1,2,3];}
+  else if(name==='random'){rowVals=Array.from({length:R},()=>Math.floor(Math.random()*4)*10);cVals=Array.from({length:C},()=>Math.floor(Math.random()*9)+1);}
+  rowVals.forEach((v,i)=>{const e=document.getElementById(`rv${i}`);if(e)e.value=v;});
+  cVals.forEach((v,i)=>{const e=document.getElementById(`cv${i}`);if(e)e.value=v;});
+  updateCode1();reset();
+}
+for(let i=0;i<R;i++){const e=document.getElementById(`rv${i}`);if(e)e.addEventListener('input',()=>{rowVals[i]=parseInt(e.value)||0;updateCode1();});}
+for(let i=0;i<C;i++){const e=document.getElementById(`cv${i}`);if(e)e.addEventListener('input',()=>{cVals[i]=parseInt(e.value)||0;updateCode1();});}
+
+function updateCode1(){
+  const a=getA(),d=getD(),c=getCV();
+  document.getElementById('cl1a').textContent=`a = np.array([${a.map(r=>`[${r.join(',')}]`).join(',')}])  # shape (${R},${C})`;
+  document.getElementById('cl1b').textContent=`c = np.array([${c.join(', ')}])  # shape (${C},)`;
+  document.getElementById('cl1c').textContent=`d = np.array([${d.map(r=>`[${r[0]}]`).join(',')}])  # shape (${R},1)`;
+}
+function updateAllDynamic(){
+  const res=getResult(),c=getCV(),rv=rowVals;
+  const resStr=`array([${res.map(r=>`[${r.join(',')}]`).join(',')}])`;
+  document.getElementById('cl2out').innerHTML=`<span class="out">→  ${resStr}</span>`;
+  document.getElementById('cl3out').innerHTML=`<span class="out">→  ${resStr}</span>`;
+  document.getElementById('rc21').innerHTML=`<div class="rc-expr">(${R},${C}) + (${C},) → shape (${R},${C}) ✓</div><div class="rc-desc">${C} cols match. NumPy repeats c down all ${R} rows.</div>`;
+  document.getElementById('rc31').innerHTML=`<div class="rc-expr">(${R},1) + (${C},) → shape (${R},${C}) ✓</div><div class="rc-desc">Both stretch — d right ×${C}, c down ×${R}. Same result as Case 1!</div>`;
+}
+
+function mkCell(cls,val,id,hidden){
+  const c=document.createElement('div');c.className=`cell ${cls}`;c.textContent=val;
+  if(id)c.id=id;if(hidden)c.style.opacity='0';return c;
+}
+function mkHdr(){const d=document.createElement('div');d.className='row-lbl';return d;}
+
+function buildGrid(cid,cfg){
+  const cont=document.getElementById(cid);cont.innerHTML='';
+  // col headers
+  const hRow=document.createElement('div');hRow.className='g-row';hRow.appendChild(mkHdr());
+  for(let c=0;c<C;c++){const h=document.createElement('div');h.className='hdr-c';h.textContent=`c${c}`;hRow.appendChild(h);}
+  cont.appendChild(hRow);
+  // data rows
+  for(let r=0;r<R;r++){
+    const row=document.createElement('div');row.className='g-row';
+    const lbl=document.createElement('div');lbl.className='row-lbl';lbl.textContent=cfg.rowLbl?cfg.rowLbl(r):`r${r}`;row.appendChild(lbl);
+    for(let c=0;c<C;c++) row.appendChild(mkCell(cfg.cls(r,c),cfg.val(r,c),cfg.id(r,c),cfg.hidden(r,c)));
+    cont.appendChild(row);
+  }
+}
+
+function buildCase2(){
+  const a=getA(),cv=getCV(),res=getResult(),d=getD();
+  buildGrid('g2a',{rowLbl:r=>`r${r}`,cls:()=>'c-blue',val:(r,c)=>a[r][c],id:(r,c)=>`g2a_${r}_${c}`,hidden:()=>false});
+  buildGrid('g2c',{rowLbl:r=>r===0?'orig':`cp${r}`,cls:(r)=>r===0?'c-yel':'c-yel-d',val:(_,c)=>cv[c],id:(r,c)=>`g2c_${r}_${c}`,hidden:(r)=>r>0});
+  buildGrid('g2res',{rowLbl:r=>`r${r}`,cls:()=>'c-hit',val:(r,c)=>res[r][c],id:(r,c)=>`g2res_${r}_${c}`,hidden:()=>true});
+}
+function buildCase3(){
+  const cv=getCV(),res=getResult(),d=getD();
+  buildGrid('g3d',{rowLbl:r=>`r${r}`,cls:(r,c)=>c===0?'c-pu':'c-pu-d',val:(r)=>d[r][0],id:(r,c)=>`g3d_${r}_${c}`,hidden:(r,c)=>c>0});
+  buildGrid('g3c',{rowLbl:r=>r===0?'orig':`cp${r}`,cls:(r)=>r===0?'c-yel':'c-yel-d',val:(_,c)=>cv[c],id:(r,c)=>`g3c_${r}_${c}`,hidden:(r)=>r>0});
+  buildGrid('g3res',{rowLbl:r=>`r${r}`,cls:()=>'c-hit',val:(r,c)=>res[r][c],id:(r,c)=>`g3res_${r}_${c}`,hidden:()=>true});
+}
+
+function showEl(id){const e=document.getElementById(id);if(e)e.style.opacity='1';}
+function clrHL(sid){document.querySelectorAll(`#${sid} .codeline`).forEach(e=>e.classList.remove('hl'));}
+function hlLine(id){const e=document.getElementById(id);if(e)e.classList.add('hl');}
+function activeSection(id){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function getSpeed(){return parseInt(document.getElementById('speedSel').value);}
+function setInfo(t){document.getElementById('stepInfo').textContent=t;}
+function setPhase(t){document.getElementById('phaseLabel').textContent=t;}
+function setPct(s){document.getElementById('progressFill').style.width=Math.round(((s+1)/STEPS.length)*100)+'%';}
+function setPill(id,cls,txt){const p=document.getElementById(id);if(p){p.className=`scan-pill ${cls}`;p.style.opacity='1';p.textContent=txt;}}
+
+function buildSteps(){
+  const res=getResult(),cv=getCV(),rv=rowVals;
+  const resCells=[];
+  for(let r=0;r<R;r++) for(let c2=0;c2<C;c2++)
+    resCells.push({s:'sec2',t:'resCell',r,c:c2,pfxA:'g2a',pfxC:'g2c',pfxRes:'g2res',pill:'pill2',
+      aOrigCls:'c-blue', cOrigCls:r===0?'c-yel':'c-yel-d', line:'cl2c',
+      info:`[${r},${c2}]: a[${r},${c2}] = ${rv[r]}  +  c[${c2}] = ${cv[c2]}  →  ${res[r][c2]}`});
+  const resCells3=[];
+  for(let r=0;r<R;r++) for(let c2=0;c2<C;c2++)
+    resCells3.push({s:'sec3',t:'resCell',r,c:c2,pfxA:'g3d',pfxC:'g3c',pfxRes:'g3res',pill:'pill3',
+      aOrigCls:c2===0?'c-pu':'c-pu-d', cOrigCls:r===0?'c-yel':'c-yel-d', line:'cl3c',
+      info:`[${r},${c2}]: d[${r},0] = ${rv[r]}  +  c[${c2}] = ${cv[c2]}  →  ${res[r][c2]}`});
+
+  return [
+    {s:'sec1',t:'build',info:'Arrays ready. Press Step to begin.'},
+    // Sec 2
+    {s:'sec2',t:'sec',info:`Case 1: shape (${R},${C}) + shape (${C},) — c's ${C} cols match a's ${C} cols exactly.`},
+    {s:'sec2',t:'cb',id:'cb2',line:'cl2a',info:`a shape (${R},${C}): ${R} rows × ${C} cols.  c shape (${C},): just ${C} values — 1 row only.`},
+    {s:'sec2',t:'pill',pill:'pill2',cls:'sp-hl',txt:`c = [${cv.join(',')}] — 1 row only. NumPy will stamp it ${R}× downward...`,line:'cl2b',info:`c has only 1 row. NumPy copies it silently to fill all ${R} rows of a.`},
+    {s:'sec2',t:'bcastRow',r:1,pfx:'g2c',pill:'pill2',line:'cl2b',info:`Stamp 1: c = [${cv.join(',')}] → row 1 (dashed = auto-copy)`},
+    {s:'sec2',t:'bcastRow',r:2,pfx:'g2c',pill:'pill2',line:'cl2b',info:`Stamp 2: c = [${cv.join(',')}] → row 2 (dashed = auto-copy)`},
+    {s:'sec2',t:'bcastRow',r:3,pfx:'g2c',pill:'pill2',line:'cl2b',info:`Stamp 3: c = [${cv.join(',')}] → row 3 (dashed = auto-copy)`},
+    ...resCells,
+    {s:'sec2',t:'rcard',id:'rc21',info:`Case 1 confirmed: (${R},${C}) + (${C},) → (${R},${C}) ✓`},
+    {s:'sec2',t:'rcard',id:'rc22',info:'Result shape = larger array shape. Broadcasting never changes the large array.'},
+    // Sec 3
+    {s:'sec3',t:'sec',info:`Case 2: shape (${R},1) + shape (${C},) — BOTH arrays stretch simultaneously.`},
+    {s:'sec3',t:'cb',id:'cb3',line:'cl3a',info:`d has only 1 column. c has only 1 row. BOTH need to stretch!`},
+    {s:'sec3',t:'pill',pill:'pill3',cls:'sp-pu',txt:`d — 1 col only. NumPy repeats it rightward ×${C}...`,line:'cl3b',info:`d has 1 col — NumPy stretches it right to match c's ${C} columns.`},
+    {s:'sec3',t:'bcastCol',c:1,pfx:'g3d',pill:'pill3',line:'cl3b',info:`d col → copied to col 1 (dashed = auto-copy rightward)`},
+    {s:'sec3',t:'bcastCol',c:2,pfx:'g3d',pill:'pill3',line:'cl3b',info:`d col → copied to col 2 (dashed = auto-copy rightward)`},
+    {s:'sec3',t:'pill',pill:'pill3',cls:'sp-hl',txt:`c — 1 row only. NumPy also repeats it downward ×${R}...`,line:'cl3b',info:`c has 1 row — NumPy also stamps it down to match d's ${R} rows.`},
+    {s:'sec3',t:'bcastRow',r:1,pfx:'g3c',pill:'pill3',line:'cl3b',info:`c row → copied to row 1 (dashed = auto-copy downward)`},
+    {s:'sec3',t:'bcastRow',r:2,pfx:'g3c',pill:'pill3',line:'cl3b',info:`c row → copied to row 2 (dashed = auto-copy downward)`},
+    {s:'sec3',t:'bcastRow',r:3,pfx:'g3c',pill:'pill3',line:'cl3b',info:`c row → copied to row 3 (dashed = auto-copy downward)`},
+    ...resCells3,
+    {s:'sec3',t:'rcard',id:'rc31',info:`Case 2 confirmed: (${R},1) + (${C},) → (${R},${C}) ✓`},
+    {s:'sec3',t:'rcard',id:'rc32',info:'Both arrays stretched. Identical result to Case 1!'},
+    // Sec 4
+    {s:'sec4',t:'sec',info:'Step 4: Broadcasting rules — when does it work and when does it fail?'},
+    {s:'sec4',t:'cb',id:'cb4',line:'cl4a',info:'Rule: for each dim, sizes must be EQUAL or one must be 1.'},
+    {s:'sec4',t:'line',line:'cl4b',info:`(${R},${C}) + (${C},): cols ${C}==${C} ✓ — compatible.`},
+    {s:'sec4',t:'rcard',id:'rc41',info:'Cols match → broadcast valid.'},
+    {s:'sec4',t:'line',line:'cl4c',info:`(${R},1) + (${C},): 1 stretches to ${C}, 1 stretches to ${R} → both compatible.`},
+    {s:'sec4',t:'rcard',id:'rc42',info:'Both have dim=1 → dual broadcast → valid.'},
+    {s:'sec4',t:'line',line:'cl4d',info:'Scalar: single value → applies to every cell in the array.'},
+    {s:'sec4',t:'rcard',id:'rc43',info:'Scalar always compatible with any shape.'},
+    {s:'sec4',t:'line',line:'cl4e',info:'(2,4)+(4,4): rows 2≠4 and neither is 1 → ValueError!'},
+    {s:'sec4',t:'rcard',id:'rc44',info:'2≠4 and neither is 1 → incompatible → ValueError raised!'},
+  ];
+}
+
+let STEPS=[], current=-1, playing=false, playTimer=null, built={};
+
+function applyStep(s){
+  setPct(s); const step=STEPS[s];
+  if(step.line){clrHL(step.s);hlLine(step.line);}
+
+  if(step.t==='build'){activeSection('sec1');setInfo(step.info);setPhase('Step 1');return;}
+  if(step.t==='sec'){
+    showEl(step.s);activeSection(step.s);
+    if(!built[step.s]){
+      if(step.s==='sec2') buildCase2();
+      if(step.s==='sec3') buildCase3();
+      built[step.s]=true;
+    }
+    setInfo(step.info);setPhase('Step '+step.s.replace('sec',''));return;
+  }
+  if(step.t==='cb'){showEl(step.id);setInfo(step.info);return;}
+  if(step.t==='line'){setInfo(step.info);return;}
+  if(step.t==='rcard'){const e=document.getElementById(step.id);if(e)e.classList.add('show');setInfo(step.info);return;}
+  if(step.t==='pill'){setPill(step.pill,step.cls,step.txt);setInfo(step.info);return;}
+
+  if(step.t==='bcastRow'){
+    for(let c=0;c<C;c++) showEl(`${step.pfx}_${step.r}_${c}`);
+    setPill(step.pill,'sp-hl',`Row ${step.r} stamped: [${getCV().join(',')}] (dashed = auto-copy)`);
+    setInfo(step.info);return;
+  }
+  if(step.t==='bcastCol'){
+    for(let r=0;r<R;r++) showEl(`${step.pfx}_${r}_${step.c}`);
+    setPill(step.pill,'sp-pu',`Col ${step.c} stamped: [${rowVals.join(',')}] (dashed = auto-copy)`);
+    setInfo(step.info);return;
+  }
+  if(step.t==='resCell'){
+    const {r,c,pfxA,pfxC,pfxRes,pill,aOrigCls,cOrigCls}=step;
+    if(window._ph) window._ph.forEach(({id,cls})=>{const e=document.getElementById(id);if(e)e.className=`cell ${cls}`;});
+    const aCell=document.getElementById(`${pfxA}_${r}_${c}`);
+    const cCell=document.getElementById(`${pfxC}_${r}_${c}`);
+    if(aCell)aCell.className='cell c-rowhl';
+    if(cCell)cCell.className='cell c-rowhl';
+    showEl(`${pfxRes}_${r}_${c}`);
+    window._ph=[{id:`${pfxA}_${r}_${c}`,cls:aOrigCls},{id:`${pfxC}_${r}_${c}`,cls:cOrigCls}];
+    const res=getResult();
+    setPill(pill,'sp-ok',`[${r},${c}]: ${getA()[r][c]} + ${getCV()[c]} = ${res[r][c]} ✓`);
+    setInfo(step.info);return;
+  }
+}
+
+function initSim(){STEPS=buildSteps();updateAllDynamic();}
+function stepForward(){if(current>=STEPS.length-1)return;current++;applyStep(current);document.getElementById('stepBtn').disabled=current>=STEPS.length-1;}
+function startPlay(){if(current>=STEPS.length-1)reset();playing=true;document.getElementById('playBtn').textContent='⏸ Pause';document.getElementById('stepBtn').disabled=true;tick();}
+function tick(){if(!playing)return;if(current>=STEPS.length-1){stopPlay();return;}stepForward();playTimer=setTimeout(tick,getSpeed());}
+function stopPlay(){playing=false;clearTimeout(playTimer);document.getElementById('playBtn').textContent='▶ Play';document.getElementById('stepBtn').disabled=current>=STEPS.length-1;}
+function reset(){
+  stopPlay();current=-1;built={};window._ph=[];initSim();
+  ['sec2','sec3','sec4'].forEach(id=>{const e=document.getElementById(id);if(e){e.style.opacity='0';e.classList.remove('active');}});
+  document.getElementById('sec1').classList.remove('active');
+  ['cb2','cb3','cb4'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.opacity='0';});
+  ['rc21','rc22','rc31','rc32','rc41','rc42','rc43','rc44'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('show');});
+  ['pill2','pill3'].forEach(id=>{const e=document.getElementById(id);if(e){e.style.opacity='0';e.textContent='';}});
+  ['g2a','g2c','g2res','g3d','g3c','g3res'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='';});
+  document.querySelectorAll('.codeline').forEach(e=>e.classList.remove('hl'));
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('phaseLabel').textContent='';
+  document.getElementById('stepInfo').textContent='Set up your arrays below, then press Play.';
+  document.getElementById('stepBtn').disabled=false;document.getElementById('playBtn').textContent='▶ Play';
+}
+document.getElementById('playBtn').addEventListener('click',()=>{if(playing)stopPlay();else startPlay();});
+document.getElementById('stepBtn').addEventListener('click',stepForward);
+document.getElementById('resetBtn').addEventListener('click',reset);
+updateCode1();reset();
+</script>
