@@ -1,0 +1,513 @@
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f7f7fb; padding: 1.25rem; }
+  .sticky-controls { position: sticky; top: 0; z-index: 101; background: #f7f7fb; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; margin-bottom: .75rem; }
+  .btn-row { display: flex; gap: 8px; margin-bottom: .75rem; flex-wrap: wrap; align-items: center; }
+  button { font-size: 13px; padding: 6px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; cursor: pointer; }
+  button:hover { background: #f0f0f0; }
+  button.primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+  button.primary:hover { background: #0C447C; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  select { font-size: 13px; padding: 4px 10px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; }
+  .progress-bar { height: 4px; background: #E6F1FB; border-radius: 2px; margin-bottom: .75rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: #185FA5; border-radius: 2px; transition: width 0.3s; }
+  .step-info { font-size: 13px; color: #0C447C; background: #E6F1FB; border: 1px solid #85B7EB; border-radius: 8px; padding: 9px 16px; min-height: 36px; text-align: center; line-height: 1.5; }
+
+  .sticky-ref { position: sticky; top: 0; z-index: 100; background: #1a2744; border-radius: 10px; padding: 10px 16px; margin-bottom: 1rem; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+  .sr-title { font-size: 11px; font-weight: 700; color: #aac4f0; text-transform: uppercase; letter-spacing: 0.08em; }
+  .sr-chip { border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; font-family: monospace; white-space: nowrap; }
+  .sr-ok  { background: #1B5E20; color: #C8E6C9; border: 1px solid #43A047; }
+  .sr-err { background: #7f1c1c; color: #FFCDD2; border: 1px solid #E53935; }
+  .sr-pu  { background: #4A148C; color: #E1BEE7; border: 1px solid #AB47BC; }
+  .sr-div { width: 1px; background: #3a4f7a; height: 28px; }
+
+  .sec { background: #fff; border-radius: 14px; border: 0.5px solid #e0e0e0; padding: 1rem 1.25rem; margin-bottom: .75rem; opacity: 0; transition: opacity 0.5s, border-color 0.3s; }
+  .sec.active { border-color: #185FA5; box-shadow: 0 0 0 3px #E6F1FB; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #185FA5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  .builder-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; background: #f0f5ff; border-radius: 10px; border: 1px solid #c5d8f5; }
+  .builder-row label { font-size: 12px; color: #185FA5; font-weight: 600; }
+  .preset-btn { font-size: 11px; padding: 3px 10px; border-radius: 6px; border: 1px solid #85B7EB; background: #E6F1FB; color: #0C447C; cursor: pointer; }
+  .preset-btn:hover { background: #B5D4F4; }
+  .thresh-wrap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; padding: 8px 14px; background: #fafafa; border-radius: 8px; border: 0.5px solid #e8e8e8; }
+  .thresh-wrap label { font-size: 12px; color: #555; font-weight: 600; }
+  .tinp { width: 56px; height: 36px; font-size: 15px; font-weight: 700; border-radius: 7px; border: 2px solid #85B7EB; background: #E6F1FB; color: #0C447C; text-align: center; padding: 0; }
+  .tinp:focus { outline: none; border-color: #185FA5; }
+  .edit-col-hdrs { display: flex; gap: 4px; margin-left: 52px; margin-bottom: 3px; }
+  .edit-col-hdr  { width: 52px; text-align: center; font-size: 10px; color: #999; }
+  .edit-row-g { display: flex; align-items: center; gap: 4px; }
+  .edit-lbl { width: 46px; font-size: 10px; color: #999; text-align: right; padding-right: 6px; flex-shrink: 0; }
+  .edit-cell { width: 52px; height: 42px; border-radius: 8px; border: 2px solid #85B7EB; background: #E6F1FB; color: #0C447C; font-size: 13px; font-weight: 700; text-align: center; padding: 0; }
+  .edit-cell:focus { outline: none; border-color: #185FA5; background: #fff; }
+
+  .codebl { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px 4px; font-family: monospace; font-size: 12.5px; line-height: 1.85; overflow-x: auto; opacity: 0; transition: opacity 0.5s; margin-bottom: 10px; }
+  .codeline { padding: 2px 12px; border-radius: 3px; white-space: pre; color: #111; display: block; transition: background 0.3s; }
+  .codeline.hl { background: #FFF9C4; border-left: 3px solid #F9A825; padding-left: 9px; }
+  .cm  { color: #888; }
+  .out { color: #1B5E20; font-weight: 600; }
+  .err { color: #B71C1C; font-weight: 600; }
+  .idx { color: #185FA5; font-weight: 700; }
+
+  .arr-wrap { overflow-x: auto; margin-bottom: 6px; }
+  .cells-row { display: flex; gap: 6px; flex-wrap: nowrap; margin-bottom: 4px; min-width: max-content; }
+  .cell-block { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
+  .cell { width: 62px; height: 52px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; border: 2px solid; transition: all 0.3s; }
+  .c-blue  { background: #E6F1FB; color: #0C447C; border-color: #378ADD; }
+  .c-hit   { background: #E8F5E9; color: #1B5E20; border-color: #43A047; }
+  .c-err   { background: #FFEBEE; color: #B71C1C; border-color: #E53935; }
+  .c-rowhl { background: #FFF9C4; color: #7B6000; border-color: #F9A825; }
+  .c-dim   { background: #f9f9f9; color: #ccc; border-color: #e0e0e0; }
+
+  .badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 5px; white-space: nowrap; }
+  .b-ok  { background: #E8F5E9; color: #1B5E20; border: 1px solid #81C784; }
+  .b-err { background: #FFEBEE; color: #B71C1C; border: 1px solid #EF9A9A; }
+  .b-dim { background: #f9f9f9; color: #bbb; border: 1px solid #e0e0e0; }
+  .b-pu  { background: #F3E5F5; color: #6A1B9A; border: 1px solid #CE93D8; }
+  .b-skip { background: #f9f9f9; color: #ccc; border: 1px dashed #ddd; font-style: italic; }
+  .cell-note { font-size: 9px; color: #999; text-align: center; line-height: 1.3; max-width: 62px; }
+  .cell-note.n-ok  { color: #2E7D32; }
+  .cell-note.n-err { color: #B71C1C; font-weight: 700; }
+
+  .result-box { display: inline-flex; align-items: center; gap: 10px; border-radius: 10px; padding: 10px 18px; margin-bottom: 10px; opacity: 0; transition: opacity 0.5s; }
+  .rb-ok  { background: #E8F5E9; border: 2px solid #43A047; }
+  .rb-err { background: #FFEBEE; border: 2px solid #E53935; }
+  .rb-ok .rb-val  { color: #1B5E20; }
+  .rb-err .rb-val { color: #B71C1C; }
+  .rb-val { font-size: 22px; font-weight: 700; font-family: monospace; }
+
+  .scan-pill { font-size: 13px; font-weight: 500; border-radius: 7px; padding: 5px 14px; display: inline-block; margin-bottom: 8px; opacity: 0; transition: opacity 0.3s; min-height: 28px; }
+  .sp-hl  { background: #FFF9C4; color: #7B6000; border: 1px solid #F9A825; }
+  .sp-ok  { background: #E8F5E9; color: #1B5E20; border: 1px solid #81C784; }
+  .sp-err { background: #FFEBEE; color: #B71C1C; border: 1px solid #EF9A9A; }
+  .sp-pu  { background: #F3E5F5; color: #6A1B9A; border: 1px solid #AB47BC; }
+
+  .rcards { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .rcard { border-radius: 10px; padding: 10px 14px; border: 2px solid; opacity: 0; transition: opacity 0.5s; }
+  .rcard.show { opacity: 1; }
+  .rc-ok  { background: #E8F5E9; border-color: #43A047; }
+  .rc-ok  .rc-expr { color: #1B5E20; } .rc-ok  .rc-desc { color: #2E7D32; }
+  .rc-err { background: #FFEBEE; border-color: #E53935; }
+  .rc-err .rc-expr { color: #B71C1C; } .rc-err .rc-desc { color: #C62828; }
+  .rc-hl  { background: #FFF9C4; border-color: #F9A825; }
+  .rc-hl  .rc-expr { color: #7B6000; } .rc-hl  .rc-desc { color: #7B6000; }
+  .rc-pu  { background: #F3E5F5; border-color: #AB47BC; }
+  .rc-pu  .rc-expr { color: #6A1B9A; } .rc-pu  .rc-desc { color: #7B1FA2; }
+  .rc-expr { font-family: monospace; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .rc-desc { font-size: 12px; line-height: 1.5; }
+
+  .summary-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .sum-box { flex: 1; min-width: 160px; border-radius: 10px; padding: 10px 14px; border: 2px solid; opacity: 0; transition: opacity 0.5s; text-align: center; }
+  .sum-box.show { opacity: 1; }
+  .sum-ok  { background: #E8F5E9; border-color: #43A047; color: #1B5E20; }
+  .sum-err { background: #FFEBEE; border-color: #E53935; color: #B71C1C; }
+  .sum-val { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .sum-lbl { font-size: 12px; }
+</style>
+
+<div class="sticky-controls">
+  <div class="btn-row">
+    <button class="primary" id="playBtn">▶ Play</button>
+    <button id="stepBtn">Step →</button>
+    <button id="resetBtn">↺ Reset</button>
+    <span style="font-size:12px;color:#888;">Speed:</span>
+    <select id="speedSel">
+      <option value="900">Slow</option>
+      <option value="500" selected>Normal</option>
+      <option value="180">Fast</option>
+    </select>
+    <span id="phaseLabel" style="font-size:12px;color:#aaa;margin-left:4px;"></span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="step-info" id="stepInfo">Edit the array and thresholds, then press Play.</div>
+</div>
+
+<div class="sticky-ref">
+  <span class="sr-title">📌 Ref</span>
+  <span class="sr-chip sr-ok">np.any() → True if ONE match ⚡ short-circuits</span>
+  <div class="sr-div"></div>
+  <span class="sr-chip sr-err">np.all() → True only if ALL match ⚡ short-circuits</span>
+  <div class="sr-div"></div>
+  <span class="sr-chip sr-pu">np.where() → labels every element</span>
+</div>
+
+<h2 style="font-size:16px;font-weight:500;color:#111;margin-bottom:.75rem;">Logical Operations — np.any() · np.all() · np.where()</h2>
+
+<!-- Sec 1 -->
+<div class="sec" id="sec1" style="opacity:1;">
+  <div class="sec-label">Step 1 — build your marks array</div>
+  <div class="builder-row">
+    <label>Presets:</label>
+    <button class="preset-btn" onclick="loadPreset('default')">Default (10 marks)</button>
+    <button class="preset-btn" onclick="loadPreset('allpass')">All passing</button>
+    <button class="preset-btn" onclick="loadPreset('random')">Random</button>
+  </div>
+  <div class="thresh-wrap">
+    <label>Pass mark (≥):</label>
+    <input class="tinp" id="tPass" type="number" value="35">
+    <label style="margin-left:12px;">Distinction (>):</label>
+    <input class="tinp" id="tDist" type="number" value="90">
+  </div>
+  <div style="overflow-x:auto; margin-bottom:8px;">
+    <div class="edit-col-hdrs" id="editColHdrs"></div>
+    <div class="edit-row-g" id="editRow"></div>
+  </div>
+  <div class="codebl" id="cb1" style="opacity:1;">
+    <span class="codeline" id="cl1a">marks = np.array([45, 78, 23, 92, 67, 88, 34, 56, 91, 72])</span>
+    <span class="codeline"><span class="cm"># pass ≥ 35  |  distinction > 90</span></span>
+  </div>
+</div>
+
+<!-- Sec 2 — np.any() -->
+<div class="sec" id="sec2">
+  <div class="sec-label" id="sl2">Step 2 — np.any(): did at least ONE student score above 90?</div>
+  <div class="codebl" id="cb2">
+    <span class="codeline" id="cl2a">np.any(marks &gt; <span class="idx" id="idx2">90</span>)   <span class="cm"># True if even ONE element satisfies</span></span>
+    <span class="codeline" id="cl2b"><span class="cm"># ⚡ short-circuits — stops immediately when first match found</span></span>
+  </div>
+  <div class="scan-pill" id="pill2">&nbsp;</div>
+  <div class="arr-wrap"><div class="cells-row" id="arr2val"></div></div>
+  <div class="arr-wrap"><div class="cells-row" id="arr2badge"></div></div>
+  <div class="arr-wrap"><div class="cells-row" id="arr2note"></div></div>
+  <div class="result-box" id="res2">
+    <span class="rb-val" id="res2val">True ✓</span>
+    <span id="res2lbl" style="font-size:12px;">np.any() returns True</span>
+  </div>
+  <div class="rcards">
+    <div class="rcard rc-ok" id="rc21"><div class="rc-expr" id="rc21e">np.any(marks > 90) = True</div><div class="rc-desc" id="rc21d">Match found — returns True.</div></div>
+    <div class="rcard rc-hl" id="rc22"><div class="rc-expr">⚡ np.any() short-circuits</div><div class="rc-desc">Once a match is found NumPy stops — skipped cells stay gray.</div></div>
+  </div>
+</div>
+
+<!-- Sec 3 — np.all() -->
+<div class="sec" id="sec3">
+  <div class="sec-label" id="sl3">Step 3 — np.all(): did EVERY student pass?</div>
+  <div class="codebl" id="cb3">
+    <span class="codeline" id="cl3a">np.all(marks &gt;= <span class="idx" id="idx3">35</span>)   <span class="cm"># True only if ALL elements satisfy</span></span>
+    <span class="codeline" id="cl3b"><span class="cm"># ⚡ short-circuits — stops immediately when first failure found</span></span>
+  </div>
+  <div class="scan-pill" id="pill3">&nbsp;</div>
+  <div class="arr-wrap"><div class="cells-row" id="arr3val"></div></div>
+  <div class="arr-wrap"><div class="cells-row" id="arr3badge"></div></div>
+  <div class="arr-wrap"><div class="cells-row" id="arr3note"></div></div>
+  <div class="result-box" id="res3">
+    <span class="rb-val" id="res3val">False ✗</span>
+    <span id="res3lbl" style="font-size:12px;">np.all() returns False</span>
+  </div>
+  <div class="rcards">
+    <div class="rcard rc-err" id="rc31"><div class="rc-expr" id="rc31e">np.all(marks >= 35) = False</div><div class="rc-desc" id="rc31d">Failure found — returns False.</div></div>
+    <div class="rcard rc-hl" id="rc32"><div class="rc-expr">⚡ np.all() short-circuits</div><div class="rc-desc">Once a failure is found NumPy stops — skipped cells stay gray.</div></div>
+  </div>
+</div>
+
+<!-- Sec 4 — np.where() -->
+<div class="sec" id="sec4">
+  <div class="sec-label" id="sl4">Step 4 — np.where(): label each student Pass or Fail</div>
+  <div class="codebl" id="cb4">
+    <span class="codeline" id="cl4a">np.where(marks &gt;= <span class="idx" id="idx4">35</span>, <span class="out">'Pass'</span>, <span class="err">'Fail'</span>)</span>
+    <span class="codeline" id="cl4b"><span class="cm"># NO short-circuit — every element must be labelled</span></span>
+    <span class="codeline" id="cl4c"><span class="out" id="cl4out">→  ['Pass','Pass','Fail',...]</span></span>
+  </div>
+  <div class="scan-pill" id="pill4">&nbsp;</div>
+  <div class="arr-wrap"><div class="cells-row" id="arr4val"></div></div>
+  <div class="arr-wrap"><div class="cells-row" id="arr4badge"></div></div>
+  <div class="arr-wrap"><div class="cells-row" id="arr4note"></div></div>
+  <div class="summary-row">
+    <div class="sum-box sum-ok" id="sum4ok"><div class="sum-val" id="sum4okv">8 → Pass ✓</div><div class="sum-lbl">students passed</div></div>
+    <div class="sum-box sum-err" id="sum4er"><div class="sum-val" id="sum4erv">2 → Fail ✗</div><div class="sum-lbl" id="sum4erl">students failed</div></div>
+  </div>
+  <div class="rcards">
+    <div class="rcard rc-pu" id="rc41"><div class="rc-expr" id="rc41e">np.where(cond, 'Pass', 'Fail')</div><div class="rc-desc">Labels every element — no short-circuit. Original array unchanged.</div></div>
+    <div class="rcard rc-ok" id="rc42"><div class="rc-expr">np.where() returns a NEW array</div><div class="rc-desc">marks is never modified. np.where always creates a new labelled array.</div></div>
+  </div>
+</div>
+
+<script>
+const PRESETS = {
+  default: [45,78,23,92,67,88,34,56,91,72],
+  allpass: [45,78,55,92,67,88,60,56,91,72],
+};
+let DATA=[...PRESETS.default], TPASS=35, TDIST=90;
+
+document.getElementById('tPass').addEventListener('input',e=>{TPASS=parseInt(e.value)||35;updateCode1();});
+document.getElementById('tDist').addEventListener('input',e=>{TDIST=parseInt(e.value)||90;updateCode1();});
+
+function loadPreset(name){
+  if(name==='random') DATA=Array.from({length:10},()=>Math.floor(Math.random()*90)+10);
+  else DATA=[...PRESETS[name]];
+  DATA.forEach((v,i)=>{const e=document.getElementById(`ec${i}`);if(e)e.value=v;});
+  updateCode1(); reset();
+}
+
+function buildEditGrid(){
+  const n=DATA.length;
+  const hdrs=document.getElementById('editColHdrs'); hdrs.innerHTML='';
+  for(let i=0;i<n;i++){const h=document.createElement('div');h.className='edit-col-hdr';h.textContent=`[${i}]`;hdrs.appendChild(h);}
+  const row=document.getElementById('editRow'); row.innerHTML='';
+  const lbl=document.createElement('div');lbl.className='edit-lbl';lbl.textContent='marks';row.appendChild(lbl);
+  for(let i=0;i<n;i++){
+    const inp=document.createElement('input');inp.className='edit-cell';inp.type='number';inp.id=`ec${i}`;inp.value=DATA[i];
+    inp.addEventListener('input',()=>{DATA[i]=parseInt(inp.value)||0;updateCode1();});
+    row.appendChild(inp);
+  }
+}
+
+function updateCode1(){
+  const passArr=DATA.map(v=>v>=TPASS?'Pass':'Fail');
+  const passCount=DATA.filter(v=>v>=TPASS).length;
+  const failVals=DATA.filter(v=>v<TPASS);
+  const anyR=DATA.some(v=>v>TDIST), allR=DATA.every(v=>v>=TPASS);
+  document.getElementById('cl1a').textContent=`marks = np.array([${DATA.join(', ')}])`;
+  document.getElementById('idx2').textContent=TDIST;
+  document.getElementById('idx3').textContent=TPASS;
+  document.getElementById('idx4').textContent=TPASS;
+  document.getElementById('sl2').textContent=`Step 2 — np.any(): did at least ONE student score above ${TDIST}?`;
+  document.getElementById('sl3').textContent=`Step 3 — np.all(): did EVERY student pass (mark ≥ ${TPASS})?`;
+  document.getElementById('sl4').textContent=`Step 4 — np.where(): label each student Pass or Fail (≥ ${TPASS})`;
+  document.getElementById('cl2a').innerHTML=`np.any(marks &gt; <span class="idx">${TDIST}</span>)   <span class="cm"># True if even ONE element satisfies</span>`;
+  document.getElementById('cl3a').innerHTML=`np.all(marks &gt;= <span class="idx">${TPASS}</span>)   <span class="cm"># True only if ALL elements satisfy</span>`;
+  document.getElementById('cl4a').innerHTML=`np.where(marks &gt;= <span class="idx">${TPASS}</span>, <span class="out">'Pass'</span>, <span class="err">'Fail'</span>)`;
+  document.getElementById('cl4out').innerHTML=`<span class="out">→  [${passArr.join(', ')}]</span>`;
+  // result boxes
+  const rb2=document.getElementById('res2'); rb2.className=`result-box ${anyR?'rb-ok':'rb-err'}`;
+  document.getElementById('res2val').textContent=anyR?'True ✓':'False ✗';
+  document.getElementById('res2lbl').textContent=`np.any() returns ${anyR}`;
+  document.getElementById('res2lbl').style.color=anyR?'#2E7D32':'#C62828';
+  const rb3=document.getElementById('res3'); rb3.className=`result-box ${allR?'rb-ok':'rb-err'}`;
+  document.getElementById('res3val').textContent=allR?'True ✓':'False ✗';
+  document.getElementById('res3lbl').textContent=`np.all() returns ${allR}`;
+  document.getElementById('res3lbl').style.color=allR?'#2E7D32':'#C62828';
+  document.getElementById('rc21e').textContent=`np.any(marks > ${TDIST}) = ${anyR}`;
+  document.getElementById('rc21d').textContent=anyR?`Found value > ${TDIST} — returns True.`:`No value > ${TDIST} — returns False.`;
+  document.getElementById('rc31e').textContent=`np.all(marks >= ${TPASS}) = ${allR}`;
+  document.getElementById('rc31d').textContent=allR?'All values pass — returns True.':'Failure found — returns False.';
+  document.getElementById('rc41e').textContent=`np.where(marks >= ${TPASS}, 'Pass', 'Fail')`;
+  document.getElementById('sum4okv').textContent=`${passCount} → Pass ✓`;
+  document.getElementById('sum4erv').textContent=`${DATA.length-passCount} → Fail ✗`;
+  document.getElementById('sum4erl').textContent=failVals.length?`students failed (${failVals.join(', ')})`:'all students passed!';
+}
+
+function buildRow(cid, cls){
+  const cont=document.getElementById(cid); cont.innerHTML='';
+  DATA.forEach((v,i)=>{
+    const b=document.createElement('div'); b.className='cell-block';
+    const c=document.createElement('div'); c.className=`cell ${cls}`; c.id=`${cid}_${i}`; c.textContent=v;
+    b.appendChild(c); cont.appendChild(b);
+  });
+}
+function buildBadgeRow(cid){
+  const cont=document.getElementById(cid); cont.innerHTML='';
+  DATA.forEach((_,i)=>{
+    const b=document.createElement('div'); b.className='cell-block';
+    const d=document.createElement('div'); d.className='badge b-dim'; d.id=`${cid}_${i}`; d.textContent='?';
+    b.appendChild(d); cont.appendChild(b);
+  });
+}
+function buildNoteRow(cid){
+  const cont=document.getElementById(cid); cont.innerHTML='';
+  DATA.forEach((_,i)=>{
+    const b=document.createElement('div'); b.className='cell-block';
+    const n=document.createElement('div'); n.className='cell-note'; n.id=`${cid}_${i}`; n.textContent='';
+    b.appendChild(n); cont.appendChild(b);
+  });
+}
+
+function buildSteps(){
+  const anyR=DATA.some(v=>v>TDIST), allR=DATA.every(v=>v>=TPASS);
+  const steps=[];
+  steps.push({s:'sec1',t:'build',info:'Array ready. Press Step to begin.'});
+
+  // ── Sec 2: np.any() with short-circuit ──
+  steps.push({s:'sec2',t:'sec',info:`np.any(): scanning marks for at least ONE value > ${TDIST}.`});
+  steps.push({s:'sec2',t:'cb',id:'cb2',line:'cl2a',info:`np.any(marks > ${TDIST}) — stops the moment it finds a match.`});
+  let anyShorted=false;
+  for(let i=0;i<DATA.length;i++){
+    const match=DATA[i]>TDIST;
+    steps.push({s:'sec2',t:'scanCell',i,match,
+      valRow:'arr2val', badgeRow:'arr2badge', noteRow:'arr2note',
+      pill:'pill2',
+      cellOk:'c-hit', cellNo:'c-err',
+      badgeOk:'b-ok', badgeNo:'b-err',
+      badgeTxtOk:'YES ✓', badgeTxtNo:'✗ NO',
+      noteTxtOk:`${DATA[i]} > ${TDIST}\nmatch!`, noteTxtNo:`${DATA[i]} ≤ ${TDIST}\nno match`,
+      pillCls: match?'sp-ok':'sp-err',
+      pillTxt: match?`marks[${i}] = ${DATA[i]} → MATCH! ⚡ Short-circuit now!`:`marks[${i}] = ${DATA[i]} → no match, scanning...`,
+      line:'cl2b',
+      info: match?`marks[${i}] = ${DATA[i]} > ${TDIST} → MATCH! ⚡ Short-circuit — stop scanning!`
+                 :`marks[${i}] = ${DATA[i]} ≤ ${TDIST} → no match, keep scanning...`
+    });
+    if(match){ anyShorted=true; break; }
+  }
+  if(anyShorted){
+    // dim remaining unseen cells
+    const firstMatch=DATA.findIndex(v=>v>TDIST);
+    const remaining=DATA.length-firstMatch-1;
+    if(remaining>0){
+      steps.push({s:'sec2',t:'dimRemaining',from:firstMatch+1,
+        valRow:'arr2val', badgeRow:'arr2badge', noteRow:'arr2note', pill:'pill2',
+        info:`⚡ Short-circuit! ${remaining} remaining cell(s) skipped — answer already known.`
+      });
+    }
+  }
+  steps.push({s:'sec2',t:'showRes',id:'res2',pill:'pill2',
+    pillCls:anyR?'sp-ok':'sp-err', pillTxt:`np.any() = ${anyR} ⚡`,
+    info:anyR?`Match found > ${TDIST} — np.any() = True.`:`No match > ${TDIST} — np.any() = False.`});
+  steps.push({s:'sec2',t:'rcard',id:'rc21',info:'np.any() result confirmed.'});
+  steps.push({s:'sec2',t:'rcard',id:'rc22',info:'Gray cells = skipped by short-circuit. Very efficient!'});
+
+  // ── Sec 3: np.all() with short-circuit ──
+  steps.push({s:'sec3',t:'sec',info:`np.all(): checking if EVERY mark ≥ ${TPASS}. Stops on first failure.`});
+  steps.push({s:'sec3',t:'cb',id:'cb3',line:'cl3a',info:`np.all(marks >= ${TPASS}) — stops the moment it finds a failure.`});
+  let allShorted=false;
+  for(let i=0;i<DATA.length;i++){
+    const match=DATA[i]>=TPASS;
+    steps.push({s:'sec3',t:'scanCell',i,match,
+      valRow:'arr3val', badgeRow:'arr3badge', noteRow:'arr3note',
+      pill:'pill3',
+      cellOk:'c-hit', cellNo:'c-err',
+      badgeOk:'b-ok', badgeNo:'b-err',
+      badgeTxtOk:'✓ Yes', badgeTxtNo:'✗ NO',
+      noteTxtOk:`${DATA[i]} ≥ ${TPASS}\npassed`, noteTxtNo:`${DATA[i]} < ${TPASS}\nfailed!`,
+      pillCls: match?'sp-ok':'sp-err',
+      pillTxt: match?`marks[${i}] = ${DATA[i]} → passes ✓`:`marks[${i}] = ${DATA[i]} → FAIL! ⚡ Short-circuit now!`,
+      line:'cl3b',
+      info: match?`marks[${i}] = ${DATA[i]} ≥ ${TPASS} → passes ✓ keep scanning...`
+                 :`marks[${i}] = ${DATA[i]} < ${TPASS} → FAIL! ⚡ Short-circuit — stop scanning!`
+    });
+    if(!match){ allShorted=true; break; }
+  }
+  if(allShorted){
+    const firstFail=DATA.findIndex(v=>v<TPASS);
+    const remaining=DATA.length-firstFail-1;
+    if(remaining>0){
+      steps.push({s:'sec3',t:'dimRemaining',from:firstFail+1,
+        valRow:'arr3val', badgeRow:'arr3badge', noteRow:'arr3note', pill:'pill3',
+        info:`⚡ Short-circuit! ${remaining} remaining cell(s) skipped — answer already known.`
+      });
+    }
+  }
+  steps.push({s:'sec3',t:'showRes',id:'res3',pill:'pill3',
+    pillCls:allR?'sp-ok':'sp-err', pillTxt:`np.all() = ${allR} ⚡`,
+    info:allR?`All marks ≥ ${TPASS} — np.all() = True.`:`Failure found — np.all() = False.`});
+  steps.push({s:'sec3',t:'rcard',id:'rc31',info:'np.all() result confirmed.'});
+  steps.push({s:'sec3',t:'rcard',id:'rc32',info:'Gray cells = skipped by short-circuit.'});
+
+  // ── Sec 4: np.where() — no short-circuit ──
+  steps.push({s:'sec4',t:'sec',info:`np.where(): labelling every student — no short-circuit, scans all ${DATA.length}.`});
+  steps.push({s:'sec4',t:'cb',id:'cb4',line:'cl4a',info:`np.where(marks >= ${TPASS}, 'Pass', 'Fail') — every element labelled.`});
+  for(let i=0;i<DATA.length;i++){
+    const match=DATA[i]>=TPASS;
+    steps.push({s:'sec4',t:'scanCell',i,match,
+      valRow:'arr4val', badgeRow:'arr4badge', noteRow:'arr4note',
+      pill:'pill4',
+      cellOk:'c-hit', cellNo:'c-err',
+      badgeOk:'b-ok', badgeNo:'b-err',
+      badgeTxtOk:'Pass', badgeTxtNo:'Fail',
+      noteTxtOk:`${DATA[i]} ≥ ${TPASS}\n→ Pass`, noteTxtNo:`${DATA[i]} < ${TPASS}\n→ Fail`,
+      pillCls: match?'sp-ok':'sp-err',
+      pillTxt: match?`marks[${i}] = ${DATA[i]} → 'Pass'`:`marks[${i}] = ${DATA[i]} → 'Fail'`,
+      line:'cl4c',
+      info: match?`marks[${i}] = ${DATA[i]} ≥ ${TPASS} → labelled 'Pass'`
+                 :`marks[${i}] = ${DATA[i]} < ${TPASS} → labelled 'Fail'`
+    });
+  }
+  steps.push({s:'sec4',t:'showSum',info:'All students labelled. Original marks array is unchanged.'});
+  steps.push({s:'sec4',t:'rcard',id:'rc41',info:'np.where() scans all — no short-circuit.'});
+  steps.push({s:'sec4',t:'rcard',id:'rc42',info:'np.where() returns a new array — marks is never modified.'});
+
+  return steps;
+}
+
+let STEPS=[], current=-1, playing=false, playTimer=null, built={};
+
+function getSpeed(){return parseInt(document.getElementById('speedSel').value);}
+function setInfo(t){document.getElementById('stepInfo').textContent=t;}
+function setPhase(t){document.getElementById('phaseLabel').textContent=t;}
+function setPct(s){document.getElementById('progressFill').style.width=Math.round(((s+1)/STEPS.length)*100)+'%';}
+function showEl(id,s='1'){const e=document.getElementById(id);if(e)e.style.opacity=s;}
+function clrHL(sid){document.querySelectorAll(`#${sid} .codeline`).forEach(e=>e.classList.remove('hl'));}
+function hlLine(id){const e=document.getElementById(id);if(e)e.classList.add('hl');}
+function activeSection(id){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function setPill(id,cls,txt){const p=document.getElementById(id);if(p){p.className=`scan-pill ${cls}`;p.style.opacity='1';p.textContent=txt;}}
+
+function applyStep(s){
+  setPct(s); const step=STEPS[s];
+  if(step.line){clrHL(step.s);hlLine(step.line);}
+
+  if(step.t==='build'){ activeSection('sec1');setInfo(step.info);setPhase('Step 1');return; }
+
+  if(step.t==='sec'){
+    showEl(step.s);activeSection(step.s);
+    if(!built[step.s]){
+      if(step.s==='sec2'){ buildRow('arr2val','c-blue');buildBadgeRow('arr2badge');buildNoteRow('arr2note'); }
+      if(step.s==='sec3'){ buildRow('arr3val','c-blue');buildBadgeRow('arr3badge');buildNoteRow('arr3note'); }
+      if(step.s==='sec4'){ buildRow('arr4val','c-blue');buildBadgeRow('arr4badge');buildNoteRow('arr4note'); }
+      built[step.s]=true;
+    }
+    setInfo(step.info);setPhase('Step '+step.s.replace('sec',''));return;
+  }
+  if(step.t==='cb'){showEl(step.id);setInfo(step.info);return;}
+  if(step.t==='line'){setInfo(step.info);return;}
+  if(step.t==='rcard'){const e=document.getElementById(step.id);if(e)e.classList.add('show');setInfo(step.info);return;}
+
+  if(step.t==='scanCell'){
+    const {i,match,valRow,badgeRow,noteRow,pill,cellOk,cellNo,badgeOk,badgeNo,badgeTxtOk,badgeTxtNo,noteTxtOk,noteTxtNo,pillCls,pillTxt}=step;
+    const cell=document.getElementById(`${valRow}_${i}`);
+    if(cell) cell.className=`cell ${match?cellOk:cellNo}`;
+    const badge=document.getElementById(`${badgeRow}_${i}`);
+    if(badge){badge.className=`badge ${match?badgeOk:badgeNo}`;badge.textContent=match?badgeTxtOk:badgeTxtNo;}
+    const note=document.getElementById(`${noteRow}_${i}`);
+    if(note){note.className=`cell-note ${match?'n-ok':'n-err'}`;note.textContent=match?noteTxtOk:noteTxtNo;}
+    setPill(pill,pillCls,pillTxt);
+    setInfo(step.info);return;
+  }
+
+  if(step.t==='dimRemaining'){
+    const {from,valRow,badgeRow,noteRow,pill}=step;
+    for(let j=from;j<DATA.length;j++){
+      const c=document.getElementById(`${valRow}_${j}`); if(c) c.className='cell c-dim';
+      const b=document.getElementById(`${badgeRow}_${j}`); if(b){b.className='badge b-skip';b.textContent='skipped';}
+      const n=document.getElementById(`${noteRow}_${j}`); if(n){n.className='cell-note';n.textContent='not checked';}
+    }
+    setPill(pill,'sp-hl',`⚡ ${DATA.length-from} cell(s) skipped — short-circuit!`);
+    setInfo(step.info);return;
+  }
+
+  if(step.t==='showRes'){
+    showEl(step.id); setPill(step.pill,step.pillCls,step.pillTxt);
+    setInfo(step.info);return;
+  }
+  if(step.t==='showSum'){
+    ['sum4ok','sum4er'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('show');});
+    setInfo(step.info);return;
+  }
+}
+
+function initSim(){STEPS=buildSteps();updateCode1();}
+function stepForward(){if(current>=STEPS.length-1)return;current++;applyStep(current);document.getElementById('stepBtn').disabled=current>=STEPS.length-1;}
+function startPlay(){if(current>=STEPS.length-1)reset();playing=true;document.getElementById('playBtn').textContent='⏸ Pause';document.getElementById('stepBtn').disabled=true;tick();}
+function tick(){if(!playing)return;if(current>=STEPS.length-1){stopPlay();return;}stepForward();playTimer=setTimeout(tick,getSpeed());}
+function stopPlay(){playing=false;clearTimeout(playTimer);document.getElementById('playBtn').textContent='▶ Play';document.getElementById('stepBtn').disabled=current>=STEPS.length-1;}
+
+function reset(){
+  stopPlay();current=-1;built={};initSim();
+  ['sec2','sec3','sec4'].forEach(id=>{const e=document.getElementById(id);if(e){e.style.opacity='0';e.classList.remove('active');}});
+  document.getElementById('sec1').classList.remove('active');
+  ['cb2','cb3','cb4'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.opacity='0';});
+  ['rc21','rc22','rc31','rc32','rc41','rc42'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('show');});
+  ['res2','res3'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.opacity='0';});
+  ['sum4ok','sum4er'].forEach(id=>{const e=document.getElementById(id);if(e){e.style.opacity='0';e.classList.remove('show');}});
+  ['pill2','pill3','pill4'].forEach(id=>{const e=document.getElementById(id);if(e){e.style.opacity='0';e.textContent='';}});
+  ['arr2val','arr2badge','arr2note','arr3val','arr3badge','arr3note','arr4val','arr4badge','arr4note'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='';});
+  document.querySelectorAll('.codeline').forEach(e=>e.classList.remove('hl'));
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('phaseLabel').textContent='';
+  document.getElementById('stepInfo').textContent='Edit the array and thresholds, then press Play.';
+  document.getElementById('stepBtn').disabled=false;
+  document.getElementById('playBtn').textContent='▶ Play';
+}
+
+document.getElementById('playBtn').addEventListener('click',()=>{if(playing)stopPlay();else startPlay();});
+document.getElementById('stepBtn').addEventListener('click',stepForward);
+document.getElementById('resetBtn').addEventListener('click',reset);
+buildEditGrid();updateCode1();reset();
+</script>
