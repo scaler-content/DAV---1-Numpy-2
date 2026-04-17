@@ -1,0 +1,369 @@
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f7f7fb; padding: 1.25rem; }
+  .btn-row { display: flex; gap: 8px; margin-bottom: .75rem; flex-wrap: wrap; align-items: center; }
+  button { font-size: 13px; padding: 6px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; cursor: pointer; }
+  button:hover { background: #f0f0f0; }
+  button.primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+  button.primary:hover { background: #0C447C; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  select { font-size: 13px; padding: 4px 10px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; }
+  .progress-bar { height: 4px; background: #E6F1FB; border-radius: 2px; margin-bottom: .75rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: #185FA5; border-radius: 2px; transition: width 0.3s; }
+  .step-info { font-size: 13px; color: #0C447C; background: #E6F1FB; border: 1px solid #85B7EB; border-radius: 8px; padding: 9px 16px; margin-bottom: 1rem; min-height: 36px; text-align: center; line-height: 1.5; }
+
+  .sec { background: #fff; border-radius: 14px; border: 0.5px solid #e0e0e0; padding: 1rem 1.25rem; margin-bottom: .75rem; opacity: 0; transition: opacity 0.5s, border-color 0.3s; }
+  .sec.active { border-color: #185FA5; box-shadow: 0 0 0 3px #E6F1FB; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #185FA5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  .builder-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; background: #f0f5ff; border-radius: 10px; border: 1px solid #c5d8f5; }
+  .builder-row label { font-size: 12px; color: #185FA5; font-weight: 600; }
+  .preset-btn { font-size: 11px; padding: 3px 10px; border-radius: 6px; border: 1px solid #85B7EB; background: #E6F1FB; color: #0C447C; cursor: pointer; }
+  .preset-btn:hover { background: #B5D4F4; }
+  .edit-col-hdrs { display: flex; gap: 4px; margin-left: 52px; margin-bottom: 3px; }
+  .edit-col-hdr  { width: 52px; text-align: center; font-size: 10px; color: #999; }
+  .edit-row { display: flex; align-items: center; gap: 4px; }
+  .edit-lbl { width: 46px; font-size: 10px; color: #999; text-align: right; padding-right: 6px; flex-shrink: 0; }
+  .edit-cell { width: 52px; height: 42px; border-radius: 8px; border: 2px solid #85B7EB; background: #E6F1FB; color: #0C447C; font-size: 13px; font-weight: 700; text-align: center; padding: 0; }
+  .edit-cell:focus { outline: none; border-color: #185FA5; background: #fff; }
+  .thresh-inp { width: 60px; height: 38px; font-size: 16px; font-weight: 700; border-radius: 8px; border: 2px solid #E53935; background: #FFEBEE; color: #B71C1C; text-align: center; padding: 0; }
+  .thresh-inp:focus { outline: none; border-color: #B71C1C; }
+
+  .codebl { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px 4px; font-family: monospace; font-size: 12.5px; line-height: 1.85; overflow-x: auto; opacity: 0; transition: opacity 0.5s; margin-bottom: 10px; }
+  .codeline { padding: 2px 12px; border-radius: 3px; white-space: pre; color: #111; display: block; transition: background 0.3s; }
+  .codeline.hl { background: #FFF9C4; border-left: 3px solid #F9A825; padding-left: 9px; }
+  .cm  { color: #888; }
+  .out { color: #1B5E20; font-weight: 600; }
+  .err { color: #B71C1C; font-weight: 600; }
+  .idx { color: #185FA5; font-weight: 700; }
+
+  .arr-wrap { overflow-x: auto; margin-bottom: 10px; }
+  .arr-grid { display: inline-flex; flex-direction: column; gap: 3px; }
+  .arr-row  { display: flex; gap: 4px; align-items: center; }
+  .idx-chip { width: 58px; text-align: center; font-size: 10px; font-family: monospace; color: #bbb; padding: 1px 0; }
+
+  .cell { width: 58px; height: 52px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; border: 2px solid; transition: all 0.3s; }
+  .c-blue  { background: #E6F1FB; color: #0C447C; border-color: #378ADD; }
+  .c-rowhl { background: #FFF9C4; color: #7B6000; border-color: #F9A825; }
+  .c-hit   { background: #E8F5E9; color: #1B5E20; border-color: #43A047; }
+  .c-err   { background: #FFEBEE; color: #B71C1C; border-color: #E53935; }
+  .c-dim   { background: #f9f9f9; color: #bbb; border-color: #e0e0e0; }
+
+  /* Mask cells */
+  .mask-row { margin-top: 4px; }
+  .mask-cell { width: 58px; height: 44px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; border: 2px solid; transition: opacity 0.35s; }
+  .mc-t { background: #E8F5E9; color: #1B5E20; border-color: #43A047; }
+  .mc-f { background: #f9f9f9; color: #bbb; border-color: #e0e0e0; }
+
+  .scan-pill { font-size: 13px; font-weight: 500; border-radius: 7px; padding: 5px 14px; display: inline-block; margin-bottom: 8px; opacity: 0; transition: opacity 0.3s; min-height: 28px; }
+  .sp-hl  { background: #FFF9C4; color: #7B6000; border: 1px solid #F9A825; }
+  .sp-ok  { background: #E8F5E9; color: #1B5E20; border: 1px solid #81C784; }
+  .sp-err { background: #FFEBEE; color: #B71C1C; border: 1px solid #E53935; }
+
+  .rcards { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .rcard { border-radius: 10px; padding: 10px 14px; border: 2px solid; opacity: 0; transition: opacity 0.5s; }
+  .rcard.show { opacity: 1; }
+  .rc-ok  { background: #E8F5E9; border-color: #43A047; }
+  .rc-ok  .rc-expr { color: #1B5E20; } .rc-ok  .rc-desc { color: #2E7D32; }
+  .rc-err { background: #FFEBEE; border-color: #E53935; }
+  .rc-err .rc-expr { color: #B71C1C; } .rc-err .rc-desc { color: #C62828; }
+  .rc-hl  { background: #FFF9C4; border-color: #F9A825; }
+  .rc-hl  .rc-expr { color: #7B6000; } .rc-hl  .rc-desc { color: #7B6000; }
+  .rc-expr { font-family: monospace; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .rc-desc { font-size: 12px; line-height: 1.5; }
+</style>
+
+<h2 style="font-size:16px;font-weight:500;color:#111;margin-bottom:.75rem;">Masking — find students who FAILED</h2>
+
+<div class="btn-row">
+  <button class="primary" id="playBtn">▶ Play</button>
+  <button id="stepBtn">Step →</button>
+  <button id="resetBtn">↺ Reset</button>
+  <span style="font-size:12px;color:#888;">Speed:</span>
+  <select id="speedSel">
+    <option value="900">Slow</option>
+    <option value="500" selected>Normal</option>
+    <option value="180">Fast</option>
+  </select>
+  <span id="phaseLabel" style="font-size:12px;color:#aaa;margin-left:4px;"></span>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+<div class="step-info" id="stepInfo">Edit the array and threshold below, then press Play.</div>
+
+<!-- Sec 1 -->
+<div class="sec" id="sec1" style="opacity:1;">
+  <div class="sec-label">Step 1 — build your marks array</div>
+  <div class="builder-row">
+    <label>Fail if marks &lt;</label>
+    <input type="number" class="thresh-inp" id="threshInp" value="35" min="1" max="100">
+    <label style="margin-left:6px;">Presets:</label>
+    <button class="preset-btn" onclick="loadPreset('default')">Default (10 marks)</button>
+    <button class="preset-btn" onclick="loadPreset('short')">Short (6 marks)</button>
+    <button class="preset-btn" onclick="loadPreset('random')">Random</button>
+  </div>
+  <div style="overflow-x:auto;">
+    <div class="edit-col-hdrs" id="editColHdrs"></div>
+    <div style="margin-bottom:10px;"><div class="edit-row" id="editRow"></div></div>
+  </div>
+  <div class="codebl" id="cb1" style="opacity:1;">
+    <span class="codeline" id="cl1code">marks = np.array([45, 78, 23, 92, 67, 88, 34, 56, 91, 72])</span>
+    <span class="codeline"><span class="cm"># marks[marks &lt; 35] → filter failed students</span></span>
+  </div>
+</div>
+
+<!-- Sec 2 -->
+<div class="sec" id="sec2">
+  <div class="sec-label" id="sl2">Step 2 — compare each mark: marks &lt; 35</div>
+  <div class="codebl" id="cb2">
+    <span class="codeline" id="cl2a">mask = marks &lt; <span class="idx">35</span>   <span class="cm"># evaluates every element</span></span>
+    <span class="codeline" id="cl2b"><span class="cm"># True = failed (mark &lt; 35)  |  False = passed</span></span>
+  </div>
+  <div class="scan-pill sp-hl" id="pill2">&nbsp;</div>
+  <div class="arr-wrap"><div id="arr2"></div></div>
+  <div class="rcards">
+    <div class="rcard rc-hl" id="rc21"><div class="rc-expr">0 failed | 10 passed</div><div class="rc-desc">Scan complete.</div></div>
+  </div>
+</div>
+
+<!-- Sec 3 -->
+<div class="sec" id="sec3">
+  <div class="sec-label" id="sl3">Step 3 — boolean mask: True = failed, False = passed</div>
+  <div class="codebl" id="cb3">
+    <span class="codeline" id="cl3a">mask = marks &lt; <span class="idx">35</span></span>
+    <span class="codeline" id="cl3b"><span class="cm"># → [F, F, T, F, F, F, T, F, F, F]</span></span>
+  </div>
+  <div class="scan-pill sp-hl" id="pill3">&nbsp;</div>
+  <div class="arr-wrap"><div id="arr3"></div></div>
+  <div class="rcards">
+    <div class="rcard rc-ok" id="rc31"><div class="rc-expr">mask = [F, F, T, F, F, F, T, F, F, F]</div><div class="rc-desc">2 True values mark the failed students.</div></div>
+  </div>
+</div>
+
+<!-- Sec 4 -->
+<div class="sec" id="sec4">
+  <div class="sec-label" id="sl4">Step 4 — filter: marks[marks &lt; 35]</div>
+  <div class="codebl" id="cb4">
+    <span class="codeline" id="cl4a">marks[marks &lt; <span class="idx">35</span>]   <span class="cm"># index array with the boolean mask</span></span>
+    <span class="codeline" id="cl4b"><span class="out">→  array([23, 34])</span></span>
+    <span class="codeline" id="cl4c"><span class="cm"># 2 students need extra coaching</span></span>
+  </div>
+  <div class="arr-wrap" style="margin-bottom:10px;"><div id="resultArr"></div></div>
+  <div class="rcards">
+    <div class="rcard rc-ok"  id="rc41"><div class="rc-expr">marks[marks &lt; 35] = array([23, 34])</div><div class="rc-desc">Only marks below threshold are extracted.</div></div>
+    <div class="rcard rc-hl"  id="rc42"><div class="rc-expr">2 students need extra coaching</div><div class="rc-desc">Boolean masking — one line to filter any condition.</div></div>
+  </div>
+</div>
+
+<script>
+const PRESETS = {
+  default: [45,78,23,92,67,88,34,56,91,72],
+  short:   [55,28,74,19,63,41],
+};
+let DATA = [...PRESETS.default];
+let THRESHOLD = 35;
+
+document.getElementById('threshInp').addEventListener('input', function(){
+  THRESHOLD = parseInt(this.value)||35; updateCode1();
+});
+
+function loadPreset(name){
+  if(name==='random') DATA=Array.from({length:10},()=>Math.floor(Math.random()*90)+10);
+  else DATA=[...PRESETS[name]];
+  buildEditGrid(); updateCode1(); reset();
+}
+
+function buildEditGrid(){
+  const n=DATA.length;
+  const hdrs=document.getElementById('editColHdrs'); hdrs.innerHTML='';
+  for(let i=0;i<n;i++){const h=document.createElement('div');h.className='edit-col-hdr';h.textContent=`[${i}]`;hdrs.appendChild(h);}
+  const row=document.getElementById('editRow'); row.innerHTML='';
+  const lbl=document.createElement('div'); lbl.className='edit-lbl'; lbl.textContent='marks'; row.appendChild(lbl);
+  for(let i=0;i<n;i++){
+    const inp=document.createElement('input');
+    inp.className='edit-cell'; inp.type='number'; inp.id=`ec${i}`; inp.value=DATA[i];
+    inp.addEventListener('input',()=>{DATA[i]=parseInt(inp.value)||0;updateCode1();});
+    row.appendChild(inp);
+  }
+}
+
+function updateCode1(){document.getElementById('cl1code').textContent=`marks = np.array([${DATA.join(', ')}])`;}
+
+function isFailed(v){return v<THRESHOLD;}
+function getFailedVals(){return DATA.filter(v=>isFailed(v));}
+function getFailedIdxs(){return DATA.map((v,i)=>isFailed(v)?i:-1).filter(i=>i>=0);}
+
+function updateAllDynamic(){
+  const fv=getFailedVals(), fi=getFailedIdxs(), n=DATA.length;
+  const mask=DATA.map(v=>isFailed(v)?'T':'F');
+  // Labels
+  document.getElementById('sl2').textContent=`Step 2 — compare each mark: marks < ${THRESHOLD}`;
+  document.getElementById('sl3').textContent=`Step 3 — boolean mask (True = marks < ${THRESHOLD})`;
+  document.getElementById('sl4').textContent=`Step 4 — filter: marks[marks < ${THRESHOLD}]`;
+  // Code
+  document.getElementById('cl2a').innerHTML=`mask = marks &lt; <span class="idx">${THRESHOLD}</span>   <span class="cm"># evaluates every element</span>`;
+  document.getElementById('cl2b').innerHTML=`<span class="cm"># True = failed (mark < ${THRESHOLD})  |  False = passed</span>`;
+  document.getElementById('cl3a').innerHTML=`mask = marks &lt; <span class="idx">${THRESHOLD}</span>`;
+  document.getElementById('cl3b').innerHTML=`<span class="cm"># → [${mask.join(', ')}]</span>`;
+  document.getElementById('cl4a').innerHTML=`marks[marks &lt; <span class="idx">${THRESHOLD}</span>]   <span class="cm"># index with boolean mask</span>`;
+  document.getElementById('cl4b').innerHTML=`<span class="out">→  array([${fv.join(', ')}])</span>`;
+  document.getElementById('cl4c').innerHTML=`<span class="cm"># ${fi.length} student(s) need extra coaching</span>`;
+  // Cards
+  document.getElementById('rc21').innerHTML=`<div class="rc-expr">${fi.length} FAILED | ${n-fi.length} passed</div><div class="rc-desc">${fi.length>0?'Failed: '+fi.map(i=>`marks[${i}]=${DATA[i]}`).join(', '):'No students failed this threshold.'}</div>`;
+  document.getElementById('rc31').innerHTML=`<div class="rc-expr">mask = [${mask.join(', ')}]</div><div class="rc-desc">${fi.length} True value(s) mark the failed students.</div>`;
+  document.getElementById('rc41').innerHTML=`<div class="rc-expr">marks[marks &lt; ${THRESHOLD}] = array([${fv.join(', ')}])</div><div class="rc-desc">Only marks below ${THRESHOLD} are extracted.</div>`;
+  document.getElementById('rc42').innerHTML=`<div class="rc-expr">${fi.length} student(s) need extra coaching</div><div class="rc-desc">Boolean masking — one line to filter any condition.</div>`;
+}
+
+function makeArr(cid,pfx){
+  const n=DATA.length,cont=document.getElementById(cid); cont.innerHTML='';
+  const grid=document.createElement('div'); grid.className='arr-grid';
+  const cellRow=document.createElement('div'); cellRow.className='arr-row';
+  for(let i=0;i<n;i++){const c=document.createElement('div');c.className='cell c-blue';c.id=`${pfx}_c${i}`;c.textContent=DATA[i];cellRow.appendChild(c);}
+  grid.appendChild(cellRow);
+  const idxRow=document.createElement('div'); idxRow.className='arr-row';
+  for(let i=0;i<n;i++){const c=document.createElement('div');c.className='idx-chip';c.textContent=`[${i}]`;idxRow.appendChild(c);}
+  grid.appendChild(idxRow);
+  cont.appendChild(grid);
+}
+
+function makeMaskGrid(){
+  const n=DATA.length,cont=document.getElementById('arr3'); cont.innerHTML='';
+  const grid=document.createElement('div'); grid.className='arr-grid';
+  // Pre-colored value row
+  const vRow=document.createElement('div'); vRow.className='arr-row';
+  for(let i=0;i<n;i++){const c=document.createElement('div');c.className=`cell ${isFailed(DATA[i])?'c-hit':'c-dim'}`;c.textContent=DATA[i];vRow.appendChild(c);}
+  grid.appendChild(vRow);
+  // Mask row (hidden initially)
+  const mRow=document.createElement('div'); mRow.className='arr-row mask-row';
+  for(let i=0;i<n;i++){const c=document.createElement('div');c.className=`mask-cell ${isFailed(DATA[i])?'mc-t':'mc-f'}`;c.id=`mc3_${i}`;c.textContent=isFailed(DATA[i])?'T':'F';c.style.opacity='0';mRow.appendChild(c);}
+  grid.appendChild(mRow);
+  // Index row
+  const iRow=document.createElement('div'); iRow.className='arr-row';
+  for(let i=0;i<n;i++){const c=document.createElement('div');c.className='idx-chip';c.textContent=`[${i}]`;iRow.appendChild(c);}
+  grid.appendChild(iRow);
+  cont.appendChild(grid);
+}
+
+function buildSteps(){
+  const n=DATA.length, fv=getFailedVals(), fi=getFailedIdxs();
+  return [
+    {s:'sec1',t:'build',info:'Array ready. Press Step to start.'},
+    // Sec 2
+    {s:'sec2',t:'sec',info:`Step 2: Compare every mark against threshold ${THRESHOLD}.`},
+    {s:'sec2',t:'cb',id:'cb2',line:'cl2a',info:`marks < ${THRESHOLD} — NumPy evaluates every element at once.`},
+    ...DATA.map((v,i)=>({
+      s:'sec2',t:'scanCompare',pfx:'a2',i,failed:isFailed(v),line:'cl2a',
+      info:isFailed(v)?`marks[${i}] = ${v} < ${THRESHOLD} → True — FAILED ✗`:`marks[${i}] = ${v} ≥ ${THRESHOLD} → False — passed ✓`
+    })),
+    {s:'sec2',t:'rcard',id:'rc21',info:`Scan complete — ${fi.length} failed, ${n-fi.length} passed.`},
+    // Sec 3
+    {s:'sec3',t:'sec',info:'Step 3: Build the boolean mask — True for each failed mark.'},
+    {s:'sec3',t:'cb',id:'cb3',line:'cl3a',info:'Each position gets True (failed) or False (passed).'},
+    ...DATA.map((v,i)=>({
+      s:'sec3',t:'revealMask',i,failed:isFailed(v),line:'cl3b',
+      info:isFailed(v)?`marks[${i}] = ${v} → True (FAILED)`:`marks[${i}] = ${v} → False (passed)`
+    })),
+    {s:'sec3',t:'rcard',id:'rc31',info:`Mask complete — ${fi.length} True value(s) found.`},
+    // Sec 4
+    {s:'sec4',t:'sec',info:`Step 4: Apply mask — marks[marks < ${THRESHOLD}] extracts only failed marks.`},
+    {s:'sec4',t:'cb',id:'cb4',line:'cl4a',info:'Use the boolean mask to index the original array.'},
+    {s:'sec4',t:'showResult',line:'cl4b',info:`Extracted: array([${fv.join(', ')}]) — ${fi.length} failed student(s).`},
+    {s:'sec4',t:'rcard',id:'rc41',info:`marks[marks < ${THRESHOLD}] = array([${fv.join(', ')}])`},
+    {s:'sec4',t:'rcard',id:'rc42',info:`${fi.length} student(s) need extra coaching.`},
+  ];
+}
+
+let STEPS=[], current=-1, playing=false, playTimer=null, built={};
+
+function getSpeed(){return parseInt(document.getElementById('speedSel').value);}
+function setInfo(t){document.getElementById('stepInfo').textContent=t;}
+function setPhase(t){document.getElementById('phaseLabel').textContent=t;}
+function setPct(s){document.getElementById('progressFill').style.width=Math.round(((s+1)/STEPS.length)*100)+'%';}
+function showEl(id){const e=document.getElementById(id);if(e)e.style.opacity='1';}
+function clrHL(sid){document.querySelectorAll(`#${sid} .codeline`).forEach(e=>e.classList.remove('hl'));}
+function hlLine(id){const e=document.getElementById(id);if(e)e.classList.add('hl');}
+function activeSection(id){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function applyStep(s){
+  setPct(s);
+  const step=STEPS[s];
+  if(step.line){clrHL(step.s);hlLine(step.line);}
+
+  if(step.t==='build'){activeSection('sec1');setInfo(step.info);setPhase('Step 1');return;}
+  if(step.t==='sec'){
+    showEl(step.s);activeSection(step.s);
+    if(!built[step.s]){
+      if(step.s==='sec2') makeArr('arr2','a2');
+      if(step.s==='sec3') makeMaskGrid();
+      built[step.s]=true;
+    }
+    setInfo(step.info);setPhase('Step '+step.s.replace('sec',''));return;
+  }
+  if(step.t==='cb'){showEl(step.id);setInfo(step.info);return;}
+  if(step.t==='rcard'){const e=document.getElementById(step.id);if(e)e.classList.add('show');setInfo(step.info);return;}
+
+  if(step.t==='scanCompare'){
+    const cell=document.getElementById(`${step.pfx}_c${step.i}`);
+    if(cell)cell.className=`cell ${step.failed?'c-hit':'c-dim'}`;
+    const pill=document.getElementById('pill2');
+    if(pill){
+      pill.className=`scan-pill ${step.failed?'sp-err':'sp-ok'}`;
+      pill.style.opacity='1';
+      pill.textContent=step.failed?`${DATA[step.i]} < ${THRESHOLD} → True (FAILED ✗)`:`${DATA[step.i]} ≥ ${THRESHOLD} → False (passed ✓)`;
+    }
+    setInfo(step.info);return;
+  }
+  if(step.t==='revealMask'){
+    const mc=document.getElementById(`mc3_${step.i}`);
+    if(mc)mc.style.opacity='1';
+    const pill=document.getElementById('pill3');
+    if(pill){
+      pill.className=`scan-pill ${step.failed?'sp-err':'sp-ok'}`;
+      pill.style.opacity='1';
+      pill.textContent=step.failed?`[${step.i}]: True — FAILED`:`[${step.i}]: False — passed`;
+    }
+    setInfo(step.info);return;
+  }
+  if(step.t==='showResult'){
+    const fv=getFailedVals(),cont=document.getElementById('resultArr');cont.innerHTML='';
+    if(fv.length===0){
+      cont.innerHTML='<p style="color:#888;font-size:13px;padding:8px 0;">No students failed — array([])</p>';
+    } else {
+      const grid=document.createElement('div');grid.className='arr-grid';
+      const row=document.createElement('div');row.className='arr-row';
+      fv.forEach(v=>{      const c=document.createElement('div');c.className='cell c-hit';c.textContent=v;row.appendChild(c);});
+      grid.appendChild(row);cont.appendChild(grid);
+    }
+    setInfo(step.info);return;
+  }
+}
+
+function initSim(){STEPS=buildSteps();updateAllDynamic();}
+
+function stepForward(){if(current>=STEPS.length-1)return;current++;applyStep(current);document.getElementById('stepBtn').disabled=current>=STEPS.length-1;}
+function startPlay(){if(current>=STEPS.length-1)reset();playing=true;document.getElementById('playBtn').textContent='⏸ Pause';document.getElementById('stepBtn').disabled=true;tick();}
+function tick(){if(!playing)return;if(current>=STEPS.length-1){stopPlay();return;}stepForward();playTimer=setTimeout(tick,getSpeed());}
+function stopPlay(){playing=false;clearTimeout(playTimer);document.getElementById('playBtn').textContent='▶ Play';document.getElementById('stepBtn').disabled=current>=STEPS.length-1;}
+
+function reset(){
+  stopPlay();current=-1;built={};initSim();
+  ['sec2','sec3','sec4'].forEach(id=>{const e=document.getElementById(id);if(e){e.style.opacity='0';e.classList.remove('active');}});
+  document.getElementById('sec1').classList.remove('active');
+  ['cb2','cb3','cb4'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.opacity='0';});
+  ['rc21','rc31','rc41','rc42'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('show');});
+  ['pill2','pill3'].forEach(id=>{const e=document.getElementById(id);if(e){e.style.opacity='0';e.textContent='';}});
+  ['arr2','arr3','resultArr'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='';});
+  document.querySelectorAll('.codeline').forEach(e=>e.classList.remove('hl'));
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('phaseLabel').textContent='';
+  document.getElementById('stepInfo').textContent='Edit the array and threshold below, then press Play.';
+  document.getElementById('stepBtn').disabled=false;
+  document.getElementById('playBtn').textContent='▶ Play';
+}
+
+document.getElementById('playBtn').addEventListener('click',()=>{if(playing)stopPlay();else startPlay();});
+document.getElementById('stepBtn').addEventListener('click',stepForward);
+document.getElementById('resetBtn').addEventListener('click',reset);
+
+buildEditGrid();updateCode1();reset();
+</script>
