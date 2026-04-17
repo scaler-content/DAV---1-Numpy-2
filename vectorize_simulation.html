@@ -1,0 +1,389 @@
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f7f7fb; padding: 1.25rem; padding-top: 0; }
+  .sticky-top { position: sticky; top: 0; z-index: 100; background: #f7f7fb; padding: 1.25rem 1.25rem .5rem; border-bottom: 1px solid #e0e0e0; margin: 0 -1.25rem 1rem; padding-left: 1.25rem; padding-right: 1.25rem; }
+  .btn-row { display: flex; gap: 8px; margin-bottom: .75rem; flex-wrap: wrap; align-items: center; }
+  button { font-size: 13px; padding: 6px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; cursor: pointer; }
+  button:hover { background: #f0f0f0; }
+  button.primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+  button.primary:hover { background: #0C447C; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  select { font-size: 13px; padding: 4px 10px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #222; }
+  .progress-bar { height: 4px; background: #E6F1FB; border-radius: 2px; margin-bottom: .75rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: #185FA5; border-radius: 2px; transition: width 0.3s; }
+  .step-info { font-size: 13px; color: #0C447C; background: #E6F1FB; border: 1px solid #85B7EB; border-radius: 8px; padding: 9px 16px; margin-bottom: 1rem; min-height: 36px; text-align: center; line-height: 1.5; }
+
+  .sec { background: #fff; border-radius: 14px; border: 0.5px solid #e0e0e0; padding: 1rem 1.25rem; margin-bottom: .75rem; opacity: 0; transition: opacity 0.5s, border-color 0.3s; }
+  .sec.active { border-color: #185FA5; box-shadow: 0 0 0 3px #E6F1FB; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #185FA5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  /* Code: white bg, black text */
+  .codebl { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px 4px; font-family: monospace; font-size: 12.5px; line-height: 1.85; overflow-x: auto; opacity: 0; transition: opacity 0.5s; margin-bottom: 10px; }
+  .codeline { padding: 2px 12px; border-radius: 3px; white-space: pre; color: #111; display: block; transition: background 0.3s; }
+  .codeline.hl { background: #FFF9C4; border-left: 3px solid #F9A825; padding-left: 9px; }
+  .cm   { color: #888; }
+  .out  { color: #1B5E20; font-weight: 600; }
+  .err  { color: #B71C1C; font-weight: 600; }
+  .fn   { color: #185FA5; font-weight: 700; }
+  .kw   { color: #9C27B0; font-weight: 600; }
+  .str  { color: #d84315; }
+
+  /* Error box */
+  .err-box { background: #FFEBEE; border: 2px solid #E53935; border-radius: 10px; padding: 12px 14px; opacity: 0; transition: opacity 0.5s; margin-bottom: 8px; }
+  .err-box.show { opacity: 1; }
+  .err-title { font-size: 13px; font-weight: 700; color: #B71C1C; margin-bottom: 4px; }
+  .err-msg   { font-size: 12px; color: #C62828; line-height: 1.6; }
+  .err-note  { font-size: 11px; color: #B71C1C; margin-top: 6px; font-style: italic; }
+
+  /* Cells */
+  .cells-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 6px; }
+  .vcell { border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border: 2px solid; transition: all 0.3s; flex-shrink: 0; width: 54px; height: 52px; }
+  .vcell .vval  { font-size: 16px; font-weight: 700; }
+  .vcell .vlbl  { font-size: 9px; font-weight: 500; }
+  .c-blue    { background: #E6F1FB; color: #0C447C; border-color: #378ADD; }
+  .c-blue    .vlbl { color: #85B7EB; }
+  .c-even    { background: #E8F5E9; color: #1B5E20; border-color: #43A047; }
+  .c-even    .vlbl { color: #81C784; }
+  .c-odd     { background: #FFEBEE; color: #B71C1C; border-color: #E53935; }
+  .c-odd     .vlbl { color: #EF9A9A; }
+  .c-scan    { background: #FFF9C4; color: #7B6000; border-color: #F9A825; transform: scale(1.1); }
+  .c-scan    .vlbl { color: #F9A825; }
+  .c-out     { background: #E8F5E9; color: #1B5E20; border-color: #43A047; transform: scale(1.05); }
+  .c-out     .vlbl { color: #81C784; }
+  .c-dim     { background: #f5f5f5; color: #ccc; border-color: #e0e0e0; }
+
+  /* Scan pill */
+  .scan-pill { font-size: 13px; font-weight: 500; border-radius: 7px; padding: 5px 14px; display: inline-block; margin-bottom: 8px; min-height: 28px; opacity: 0; transition: opacity 0.3s; }
+  .sp-hl  { background: #FFF9C4; color: #7B6000; border: 1px solid #F9A825; }
+  .sp-ok  { background: #E8F5E9; color: #1B5E20; border: 1px solid #81C784; }
+  .sp-err { background: #FFEBEE; color: #B71C1C; border: 1px solid #EF9A9A; }
+
+  /* Result row */
+  .result-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 6px; }
+  .rchip { width: 54px; height: 52px; border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 16px; font-weight: 700; border: 2px solid; opacity: 0; transform: scale(0.7); transition: opacity 0.35s, transform 0.35s; }
+  .rchip.show { opacity: 1; transform: scale(1); }
+  .rchip .rlbl { font-size: 9px; font-weight: 500; }
+  .rc-even { background: #E8F5E9; color: #1B5E20; border-color: #43A047; }
+  .rc-even .rlbl { color: #81C784; }
+  .rc-odd  { background: #FFEBEE; color: #B71C1C; border-color: #E53935; }
+  .rc-odd  .rlbl { color: #EF9A9A; }
+
+  /* Result code line */
+  .result-code { font-family: monospace; font-size: 13px; color: #1B5E20; font-weight: 600; padding: 6px 10px; background: #E8F5E9; border: 1px solid #81C784; border-radius: 7px; opacity: 0; transition: opacity 0.5s; margin-bottom: 8px; }
+  .result-code.show { opacity: 1; }
+
+  /* Info cards at bottom */
+  .info-cards { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+  .icard { border-radius: 10px; padding: 12px 14px; border: 2px solid; opacity: 0; transition: opacity 0.5s; }
+  .icard.show { opacity: 1; }
+  .ic-blue   { background: #E6F1FB; border-color: #378ADD; }
+  .ic-blue   .ic-title { color: #0C447C; } .ic-blue   .ic-desc { color: #185FA5; }
+  .ic-green  { background: #E8F5E9; border-color: #43A047; }
+  .ic-green  .ic-title { color: #1B5E20; } .ic-green  .ic-desc { color: #2E7D32; }
+  .ic-yellow { background: #FFF9C4; border-color: #F9A825; }
+  .ic-yellow .ic-title { color: #7B6000; } .ic-yellow .ic-desc { color: #7B6000; }
+  .ic-title { font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+  .ic-desc  { font-size: 12px; line-height: 1.6; }
+
+  /* Rcard */
+  .rcard { border-radius: 10px; padding: 10px 14px; border: 2px solid; opacity: 0; transition: opacity 0.5s; margin-bottom: 8px; }
+  .rcard.show { opacity: 1; }
+  .rc-ok { background: #E8F5E9; border-color: #43A047; }
+  .rc-ok .rc-expr { color: #1B5E20; } .rc-ok .rc-desc { color: #2E7D32; }
+  .rc-err { background: #FFEBEE; border-color: #E53935; }
+  .rc-err .rc-expr { color: #B71C1C; } .rc-err .rc-desc { color: #C62828; }
+  .rc-expr { font-family: monospace; font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .rc-desc { font-size: 12px; line-height: 1.5; }
+</style>
+
+<div class="sticky-top">
+  <h2 style="font-size:16px;font-weight:500;color:#111;margin-bottom:.5rem;">Vectorization — np.vectorize()</h2>
+  <div class="btn-row">
+    <button class="primary" id="playBtn">▶ Play</button>
+    <button id="stepBtn">Step →</button>
+    <button id="resetBtn">↺ Reset</button>
+    <span style="font-size:12px;color:#888;">Speed:</span>
+    <select id="speedSel">
+      <option value="900">Slow</option>
+      <option value="500" selected>Normal</option>
+      <option value="180">Fast</option>
+    </select>
+    <span id="phaseLabel" style="font-size:12px;color:#aaa;margin-left:4px;"></span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="step-info" id="stepInfo">Press Play or Step → to begin.</div>
+</div>
+
+<!-- Sec 1: The function -->
+<div class="sec" id="sec1">
+  <div class="sec-label">Step 1 — define a Python function</div>
+  <div class="codebl" id="cb1">
+    <span class="codeline" id="cl1a"><span class="kw">def</span> <span class="fn">random_operation</span>(x):</span>
+    <span class="codeline" id="cl1b">    <span class="kw">if</span> x % 2 == 0:   <span class="cm"># even number</span></span>
+    <span class="codeline" id="cl1c">        x += 2        <span class="cm"># add 2</span></span>
+    <span class="codeline" id="cl1d">    <span class="kw">else</span>:             <span class="cm"># odd number</span></span>
+    <span class="codeline" id="cl1e">        x -= 2        <span class="cm"># subtract 2</span></span>
+    <span class="codeline" id="cl1f">    <span class="kw">return</span> x</span>
+  </div>
+  <div class="rcard rc-ok" id="rc1">
+    <div class="rc-expr">random_operation(4) → 6  |  random_operation(5) → 3</div>
+    <div class="rc-desc">Works perfectly for single values. Even → +2, Odd → -2. But what happens when we pass a whole array?</div>
+  </div>
+</div>
+
+<!-- Sec 2: Without vectorize — fails -->
+<div class="sec" id="sec2">
+  <div class="sec-label">Step 2 — without np.vectorize — fails on array</div>
+  <div class="codebl" id="cb2">
+    <span class="codeline" id="cl2a">a = np.<span class="fn">arange</span>(10)   <span class="out">→  [0,1,2,3,4,5,6,7,8,9]</span></span>
+    <span class="codeline" id="cl2b">random_operation(a)  <span class="cm"># passing whole array</span></span>
+    <span class="codeline" id="cl2c"><span class="err">ValueError: The truth value of an array</span></span>
+    <span class="codeline" id="cl2d"><span class="err">with more than one element is ambiguous</span></span>
+  </div>
+  <div class="cells-row" id="failCells"></div>
+  <div class="err-box" id="errBox">
+    <div class="err-title">ValueError</div>
+    <div class="err-msg">The truth value of an array with more than one element is ambiguous.</div>
+    <div class="err-note">The if statement needs a single value — not an array of 10 values.</div>
+  </div>
+  <div class="rcard rc-err" id="rc2">
+    <div class="rc-expr">if x % 2 == 0  ← x is an array, not a number!</div>
+    <div class="rc-desc">Python's if cannot evaluate a boolean array — it expects True or False, not [True, False, True, ...].</div>
+  </div>
+</div>
+
+<!-- Sec 3: With vectorize — wrap -->
+<div class="sec" id="sec3">
+  <div class="sec-label">Step 3 — wrap with np.vectorize()</div>
+  <div class="codebl" id="cb3">
+    <span class="codeline" id="cl3a"><span class="cm"># Wrap the function — now array-compatible</span></span>
+    <span class="codeline" id="cl3b">cool_op = np.<span class="fn">vectorize</span>(random_operation)</span>
+    <span class="codeline" id="cl3c"><span class="cm"># cool_op processes one element at a time</span></span>
+  </div>
+  <div class="rcard rc-ok" id="rc3">
+    <div class="rc-expr">np.vectorize(random_operation)  →  array-ready function</div>
+    <div class="rc-desc">np.vectorize wraps any Python function so it runs on each element individually — no loop needed in your code.</div>
+  </div>
+</div>
+
+<!-- Sec 4: Apply element by element -->
+<div class="sec" id="sec4">
+  <div class="sec-label">Step 4 — apply to array: each element processed one by one</div>
+  <div class="codebl" id="cb4">
+    <span class="codeline" id="cl4a">a = np.<span class="fn">arange</span>(10)   <span class="out">→  [0,1,2,3,4,5,6,7,8,9]</span></span>
+    <span class="codeline" id="cl4b">cool_op(a)            <span class="cm"># vectorized call</span></span>
+    <span class="codeline" id="cl4c"><span class="out" id="finalOut">→  array([2,-1,4,1,6,3,8,5,10,7])</span></span>
+  </div>
+  <div class="scan-pill sp-hl" id="pill4">&nbsp;</div>
+  <div style="font-size:11px;color:#888;margin-bottom:4px;">Input array:</div>
+  <div class="cells-row" id="inputCells"></div>
+  <div style="font-size:11px;color:#888;margin-bottom:4px;margin-top:4px;">Output array:</div>
+  <div class="result-row" id="outputCells"></div>
+  <div class="result-code" id="resultCode"></div>
+  <div class="rcard rc-ok" id="rc4">
+    <div class="rc-expr" id="rc4expr">cool_op(a)  →  array([2,-1,4,1,6,3,8,5,10,7])</div>
+    <div class="rc-desc">np.vectorize called random_operation once per element — 10 calls internally. Result is a new NumPy array.</div>
+  </div>
+</div>
+
+<!-- Sec 5: Key info cards -->
+<div class="sec" id="sec5">
+  <div class="sec-label">Step 5 — key concepts</div>
+  <div class="info-cards">
+    <div class="icard ic-blue" id="ic0">
+      <div class="ic-title">What is vectorization?</div>
+      <div class="ic-desc">Applying an operation to an entire array at once — without writing a loop.</div>
+    </div>
+    <div class="icard ic-green" id="ic1">
+      <div class="ic-title">np.vectorize() wraps your function</div>
+      <div class="ic-desc">Takes a function that works on one value and makes it work on a whole array.</div>
+    </div>
+    <div class="icard ic-yellow" id="ic2">
+      <div class="ic-title">Note</div>
+      <div class="ic-desc">np.vectorize still loops internally — use NumPy built-in ops (masking, where) when possible for true speed.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ARR = Array.from({length:10},(_,i)=>i); // [0..9]
+
+function applyFn(x){ return x%2===0 ? x+2 : x-2; }
+function isEven(x){ return x%2===0; }
+
+function makeInputCells(){
+  const cont=document.getElementById('inputCells'); cont.innerHTML='';
+  ARR.forEach((v,i)=>{
+    const el=document.createElement('div'); el.className='vcell c-blue'; el.id='ic'+i;
+    el.innerHTML=`<span class="vval">${v}</span><span class="vlbl">[${i}]</span>`;
+    cont.appendChild(el);
+  });
+}
+function makeOutputPlaceholders(){
+  const cont=document.getElementById('outputCells'); cont.innerHTML='';
+  ARR.forEach((_,i)=>{
+    const el=document.createElement('div');
+    const out=applyFn(ARR[i]);
+    el.className=`rchip ${isEven(ARR[i])?'rc-even':'rc-odd'}`; el.id='oc'+i;
+    el.innerHTML=`<span class="vval">${out}</span><span class="rlbl">${isEven(ARR[i])?'even+2':'odd-2'}</span>`;
+    document.getElementById('outputCells').appendChild(el);
+  });
+}
+
+function clrHL(secId){ document.querySelectorAll(`#${secId} .codeline`).forEach(e=>e.classList.remove('hl')); }
+function hlLine(id){ const e=document.getElementById(id); if(e) e.classList.add('hl'); }
+function showEl(id){ const e=document.getElementById(id); if(e) e.style.opacity='1'; }
+function activeSection(id){ document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function setPill(id,cls,txt){ const p=document.getElementById(id); if(!p) return; p.className=`scan-pill ${cls}`; p.style.opacity='1'; p.textContent=txt; }
+function hidePill(id){ const p=document.getElementById(id); if(p) p.style.opacity='0'; }
+
+const outArr = ARR.map(applyFn);
+
+const STEPS=[
+  // Sec 1
+  {s:'sec1', t:'sec',  info:'Defining a Python function that works on a single value.'},
+  {s:'sec1', t:'cb',   id:'cb1', line:'cl1a', info:'def random_operation(x) — takes one number x.'},
+  {s:'sec1', t:'line', line:'cl1b', info:'if x % 2 == 0 — checks if x is even. This works for a single value.'},
+  {s:'sec1', t:'line', line:'cl1c', info:'Even: x += 2 — add 2 to even numbers.'},
+  {s:'sec1', t:'line', line:'cl1e', info:'Odd: x -= 2 — subtract 2 from odd numbers.'},
+  {s:'sec1', t:'line', line:'cl1f', info:'return x — send the result back.'},
+  {s:'sec1', t:'rcard',id:'rc1', info:'Works perfectly for one value. Now what if we pass a whole array?'},
+  // Sec 2
+  {s:'sec2', t:'sec',  info:'Without np.vectorize — passing an array breaks the if statement.'},
+  {s:'sec2', t:'cb',   id:'cb2', line:'cl2a', info:'a = np.arange(10) creates [0,1,2,3,4,5,6,7,8,9].'},
+  {s:'sec2', t:'showArr', info:'The array has 10 values. random_operation(a) passes all 10 at once.'},
+  {s:'sec2', t:'line', line:'cl2b', info:'random_operation(a) — entire array passed to the function.'},
+  {s:'sec2', t:'line', line:'cl2c', info:'Python hits the if statement: if a % 2 == 0 — a is an array, not a number!'},
+  {s:'sec2', t:'err',             info:'ValueError! The if statement needs a single True/False — not an array of booleans.'},
+  {s:'sec2', t:'rcard',id:'rc2', info:'Python\'s if cannot handle arrays. We need to call the function per element.'},
+  // Sec 3
+  {s:'sec3', t:'sec',  info:'Solution: wrap the function with np.vectorize() — makes it array-compatible.'},
+  {s:'sec3', t:'cb',   id:'cb3', line:'cl3a', info:'np.vectorize wraps any Python function so it can handle arrays.'},
+  {s:'sec3', t:'line', line:'cl3b', info:'cool_op = np.vectorize(random_operation) — cool_op now works on arrays.'},
+  {s:'sec3', t:'line', line:'cl3c', info:'Internally, cool_op will call random_operation once per element.'},
+  {s:'sec3', t:'rcard',id:'rc3', info:'The function itself is unchanged — np.vectorize handles the looping for us.'},
+  // Sec 4: scan
+  {s:'sec4', t:'sec',  info:'Applying cool_op to the array — each element processed one by one.'},
+  {s:'sec4', t:'cb',   id:'cb4', line:'cl4a', info:'a = np.arange(10) — same array [0..9].'},
+  {s:'sec4', t:'init', info:'Input array ready. Now cool_op will visit each element.'},
+  ...ARR.map((v,i)=>({
+    s:'sec4', t:'scan', i, v, out:applyFn(v), even:isEven(v), line:'cl4b',
+    info:`[${i}] = ${v} → ${isEven(v)?'even':'odd'} → ${v} ${isEven(v)?'+2 =':'-2 ='} ${applyFn(v)}`
+  })),
+  {s:'sec4', t:'done', line:'cl4c', info:`All 10 elements processed. Result: array([${outArr.join(',')}])`},
+  {s:'sec4', t:'rcard',id:'rc4', info:'np.vectorize called random_operation 10 times — one per element. Clean and loop-free.'},
+  // Sec 5
+  {s:'sec5', t:'sec',   info:'Key concepts about vectorization.'},
+  {s:'sec5', t:'icard', i:0, info:'Vectorization = applying an operation to an entire array without writing a loop.'},
+  {s:'sec5', t:'icard', i:1, info:'np.vectorize wraps your function — one value in, one value out, applied across the whole array.'},
+  {s:'sec5', t:'icard', i:2, info:'Note: np.vectorize loops internally — use NumPy built-ins (masking, where) for true performance.'},
+];
+
+let current=-1, playing=false, playTimer=null, built={};
+
+function getSpeed(){ return parseInt(document.getElementById('speedSel').value); }
+function setInfo(t){ document.getElementById('stepInfo').textContent=t; }
+function setPhase(t){ document.getElementById('phaseLabel').textContent=t; }
+function setPct(s){ document.getElementById('progressFill').style.width=Math.round(((s+1)/STEPS.length)*100)+'%'; }
+
+function applyStep(s){
+  setPct(s);
+  const step=STEPS[s];
+  if(step.line){ clrHL(step.s); hlLine(step.line); }
+
+  if(step.t==='sec'){
+    showEl(step.s); activeSection(step.s);
+    setInfo(step.info); setPhase('Step '+step.s.replace('sec','')); return;
+  }
+  if(step.t==='cb'){ showEl(step.id); setInfo(step.info); return; }
+  if(step.t==='line'){ setInfo(step.info); return; }
+  if(step.t==='rcard'){ document.getElementById(step.id).classList.add('show'); setInfo(step.info); return; }
+
+  if(step.t==='showArr'){
+    if(!built.failArr){
+      const cont=document.getElementById('failCells'); cont.innerHTML='';
+      ARR.forEach((v,i)=>{ const el=document.createElement('div'); el.className='vcell c-blue'; el.innerHTML=`<span class="vval">${v}</span><span class="vlbl">[${i}]</span>`; cont.appendChild(el); });
+      built.failArr=true;
+    }
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='err'){
+    document.getElementById('errBox').classList.add('show');
+    const cont=document.getElementById('failCells');
+    cont.querySelectorAll('.vcell').forEach(el=>el.className='vcell c-err'+(el.className.includes('c-blue')?'':'')); // shake all red
+    cont.querySelectorAll('.vcell').forEach(el=>{ el.style.background='#FFEBEE'; el.style.color='#B71C1C'; el.style.borderColor='#E53935'; });
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='init'){
+    if(!built.inputCells){ makeInputCells(); makeOutputPlaceholders(); built.inputCells=true; }
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='scan'){
+    const i=step.i;
+    // reset all input cells
+    ARR.forEach((_,k)=>{
+      const e=document.getElementById('ic'+k); if(!e) return;
+      if(k<i) e.className=`vcell ${isEven(ARR[k])?'c-even':'c-odd'}`;
+      else if(k===i) e.className='vcell c-scan';
+      else e.className='vcell c-blue';
+    });
+    // show output chip
+    const oc=document.getElementById('oc'+i); if(oc) oc.classList.add('show');
+    setPill('pill4', step.even?'sp-ok':'sp-err',
+      `[${i}] = ${step.v} → ${step.even?'even +2':'odd −2'} → ${step.out}`);
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='done'){
+    ARR.forEach((_,k)=>{ const e=document.getElementById('ic'+k); if(e) e.className=`vcell ${isEven(ARR[k])?'c-even':'c-odd'}`; });
+    hidePill('pill4');
+    const rc=document.getElementById('resultCode');
+    rc.textContent=`Output: array([${outArr.join(', ')}])`;
+    rc.classList.add('show');
+    setInfo(step.info); return;
+  }
+
+  if(step.t==='icard'){
+    document.getElementById('ic'+step.i).classList.add('show');
+    setInfo(step.info); return;
+  }
+}
+
+function stepForward(){
+  if(current>=STEPS.length-1) return;
+  current++; applyStep(current);
+  document.getElementById('stepBtn').disabled=current>=STEPS.length-1;
+}
+function startPlay(){
+  if(current>=STEPS.length-1) hardReset();
+  playing=true; document.getElementById('playBtn').textContent='⏸ Pause';
+  document.getElementById('stepBtn').disabled=true; tick();
+}
+function tick(){ if(!playing) return; if(current>=STEPS.length-1){ stopPlay(); return; } stepForward(); playTimer=setTimeout(tick,getSpeed()); }
+function stopPlay(){ playing=false; clearTimeout(playTimer); document.getElementById('playBtn').textContent='▶ Play'; document.getElementById('stepBtn').disabled=current>=STEPS.length-1; }
+
+function hardReset(){
+  stopPlay(); current=-1; built={};
+  ['sec1','sec2','sec3','sec4','sec5'].forEach(id=>{ const e=document.getElementById(id); if(e){e.style.opacity='0';e.classList.remove('active');} });
+  ['cb1','cb2','cb3','cb4'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.opacity='0'; });
+  ['rc1','rc2','rc3','rc4','ic0','ic1','ic2'].forEach(id=>{ const e=document.getElementById(id); if(e) e.classList.remove('show'); });
+  ['errBox'].forEach(id=>{ const e=document.getElementById(id); if(e) e.classList.remove('show'); });
+  const p=document.getElementById('pill4'); if(p){p.style.opacity='0';p.textContent='';}
+  ['failCells','inputCells','outputCells'].forEach(id=>{ const e=document.getElementById(id); if(e) e.innerHTML=''; });
+  const rc=document.getElementById('resultCode'); if(rc) rc.classList.remove('show');
+  document.querySelectorAll('.codeline').forEach(e=>e.classList.remove('hl'));
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('phaseLabel').textContent='';
+  document.getElementById('stepInfo').textContent='Press Play or Step → to begin.';
+  document.getElementById('stepBtn').disabled=false;
+  document.getElementById('playBtn').textContent='▶ Play';
+}
+
+document.getElementById('playBtn').addEventListener('click',()=>{ if(playing) stopPlay(); else startPlay(); });
+document.getElementById('stepBtn').addEventListener('click',stepForward);
+document.getElementById('resetBtn').addEventListener('click',hardReset);
+hardReset();
+</script>
